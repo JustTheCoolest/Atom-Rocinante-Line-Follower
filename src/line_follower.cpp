@@ -22,10 +22,103 @@ void setup() {
   Serial.begin(9600);
 }
 
+// Task: Convert sensor reads to analog values
+
 
 void sensorsRead(int *sensor_data = ir, int *pins = pins, int n = 8){
   for(int i=0; i<n; i++){
     sensor_data[i] = digitalRead(pins[i]);
+  }
+}
+
+/*
+int checkStreakMembership(int sensor_data[], int i, int n = 8){
+  for(int j=i+1; j<i+3; ++j){ // At least 2 bits ahead should be 0
+    if(sensor_data[j]){
+      while(j<n-2 && sensor_data[j] && !sensor_data[j+1]){ // To find end of streak + 2 consecutive 0s
+        ++j;
+      }
+      return j+2; // Return the index from which to continue checking
+    }
+  }
+  return -1; // Stray
+}
+
+
+void filterSensors(int sensor_data[] = ir, int n = 8){
+  bool streak_flag = false;
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      continue;
+    }
+
+    if(streak_flag){
+      if(!sensor_data[++i] && !sensor_data[++i]){
+      }
+      i+=2;
+      continue;
+    }
+    
+    int jump_index = checkStreakMembership(sensor_data, i);
+    if(jump_index == -1){
+      if(streak_flag){
+        sensor_data[i] = 0;
+        continue;
+      }
+      else{
+        // Recurse
+      }
+    }
+    streak_flag = true;
+    i = jump_index;
+  }
+}
+*/
+
+
+int findEndOfStreak(int sensor_data[], int j, int n = 8){
+  ++j;
+  bool padding_check_flag;
+  while(j<n-2){
+    if(!sensor_data[i]){
+      if(!sensor_data[++j]){
+        return j+1;
+      }
+      continue;
+    }
+    ++j;
+  }
+  return n;
+}
+
+void filterSensors(int sensor_data[] = ir, int n = 8){
+  bool streak_flag = false;
+  for(int i=0; i<n-1; ++i){
+    if(sensor_data[i] && sensor_data[i+1]){
+      streak_flag = true;
+      break;
+    }
+  }
+  if(!streak_flag){
+    return;
+  }
+  bool padding_check_flag;
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      continue;
+    }
+    padding_check_flag = true;
+    for(int j=i; j<min(i+2, n); ++j){
+      if(sensor_data[j]){
+        padding_check_flag = false;
+        i = findEndOfStreak(sensor_data, j);
+        break;
+      }
+    }
+    if(padding_check_flag){
+      sensor_data[i] = 0;
+      i+=2;
+    }
   }
 }
 
@@ -48,6 +141,7 @@ float getDeviation(int sensor_data[], int n = 8){
   return deviation;
 }
 
+// Task : Stop at full black
 
 void loop() {
   sensorsRead();
