@@ -154,7 +154,7 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 // Function not ready yet
 void filterSensors(int *sensor_data = ir, int n = 8){
     int high_streak_index[2] = {-1, -1};
-    int high_streak = high_streak_index[1]-high_streak_inex[0]+1;
+    int high_streak = high_streak_index[1]-high_streak_index[0]+1;
     for(int i=0; i<n; ++i){
         int streak_index[2] = {-1, -1};
         if(sensor_data[i]){
