@@ -8,7 +8,7 @@ float error;
 int lmotor = 3;
 int lmotorn = 9;
 int rmotor = 10;
-int rmotorl = 11;
+int rmotorn = 11;
 int ir1 = 3;
 int ir2 = 4;
 int ir3 = 5;
@@ -210,7 +210,7 @@ void loop() {
   analogWrite(lmotor,bsl+pid);
   analogWrite(lmotorn, 0);
   analogWrite(rmotor, bsl-pid);
-  analogWrite(rmoton, 0);
+  analogWrite(rmotorn, 0);
   
   // int op = digitalread(ir_pin);
   delay(250);
