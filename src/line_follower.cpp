@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
 
 
 float error;
