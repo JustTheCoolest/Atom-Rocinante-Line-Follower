@@ -5,10 +5,10 @@ float error;
 
 
 // Pin list
-int lmotor = 1;
-int lmotorn = 2;
-int rmotor = 11;
-int rmotorl = 12;
+int lmotor = 3;
+int lmotorn = 9;
+int rmotor = 10;
+int rmotorl = 11;
 int ir1 = 3;
 int ir2 = 4;
 int ir3 = 5;
@@ -29,8 +29,8 @@ int ir[8];
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(1, OUTPUT);     // Motor pins are 1,2 and 11, 12 I'm fairly sure. Will have to check with
-  pinMode(2, OUTPUT);     // Haridutt.
+  pinMode(1, OUTPUT);     // Motor pins are 3,9 and 10,11.
+  pinMode(2, OUTPUT);     // From Haridutt.
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
