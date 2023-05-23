@@ -99,7 +99,7 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 }
 */
 
-
+/* there seems to be an error in this function
 int findEndOfStreak(int sensor_data[], int j, int n = 8){
   ++j;
   bool padding_check_flag;
@@ -114,6 +114,7 @@ int findEndOfStreak(int sensor_data[], int j, int n = 8){
   }
   return n;
 }
+*/
 
 void filterSensors(int sensor_data[] = ir, int n = 8){
   bool streak_flag = false;
