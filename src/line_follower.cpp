@@ -203,7 +203,7 @@ void loop() {
   }
   Serial.println(" ");
   error=getDeviation(ir);
-  Serial.print("error:")
+  Serial.print("error:");
   Serial.println(error);  // also debugging
   Serial.print("pid value:");
   pid=getpid(); // pid error value
