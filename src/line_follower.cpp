@@ -1,6 +1,8 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
 
 
+
+
 float error;
 
 
@@ -99,12 +101,12 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 }
 */
 
-/* there seems to be an error in this function
+/*
 int findEndOfStreak(int sensor_data[], int j, int n = 8){
   ++j;
   bool padding_check_flag;
   while(j<n-2){
-    if(!sensor_data[i]){
+    // if(!sensor_data[i]){ // idk what the problem even is here
       if(!sensor_data[++j]){
         return j+1;
       }
@@ -115,7 +117,6 @@ int findEndOfStreak(int sensor_data[], int j, int n = 8){
   return n;
 }
 */
-
 void filterSensors(int sensor_data[] = ir, int n = 8){
   bool streak_flag = false;
   for(int i=0; i<n-1; ++i){
@@ -136,7 +137,7 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
     for(int j=i; j<min(i+2, n); ++j){
       if(sensor_data[j]){
         padding_check_flag = false;
-        i = findEndOfStreak(sensor_data, j);
+  //      i = findEndOfStreak(sensor_data, j); remove comment once function is ok
         break;
       }
     }
@@ -148,29 +149,6 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 }
 
 
-
-
-
-
-// Function not ready yet
-void filterSensors(int *sensor_data = ir, int n = 8){
-    int high_streak_index[2] = {-1, -1};
-    int high_streak = high_streak_index[1]-high_streak_index[0]+1;
-    for(int i=0; i<n; ++i){
-        int streak_index[2] = {-1, -1};
-        if(sensor_data[i]){
-            streak_index[0] = i;
-            do{
-                ++i;
-            } while(i<n && sensor_data[i]);
-            streak_index[1] = i-1;
-        }
-        if(streak_index[1]-streak_index[0]+1 > high_streak){
-            high_streak_index[0] = streak_index[0];
-            high_streak_index[1] = streak_index[1];
-        }
-    }
-}
 
 
 
@@ -195,6 +173,27 @@ float getDeviation(int sensor_data[], int n = 8){
 
 // Task : Stop at full black
 
+
+
+float perr;
+float p, i=0, d;
+float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
+float pid;
+
+
+float getpid() {
+  perr = error;
+  p = error;
+  if (error==0) {
+    i = 0;  
+  }
+  else {
+    i = i+error;
+  }
+  d = error-perr;
+  pid = (kp*p)+(ki*i)+(kd*d);
+  return pid;
+}
 
 
 void loop() {
@@ -222,23 +221,3 @@ void loop() {
 
 
 
-
-float perr;
-float p, i=0, d;
-float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
-float pid;
-
-
-float getpid() {
-  perr = error;
-  p = error;
-  if (error==0) {
-    i = 0;  
-  }
-  else {
-    i = i+error;
-  }
-  d = error-perr;
-  pid = (kp*p)+(ki*i)+(kd*d);
-  return pid;
-}
