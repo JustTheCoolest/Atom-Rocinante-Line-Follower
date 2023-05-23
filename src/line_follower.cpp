@@ -202,8 +202,10 @@ void loop() {
   Serial.print(ir[i]); // debugging
   }
   Serial.println(" ");
-  error=getDeviation(ir); 
-  Serial.println(error); // also debugging
+  error=getDeviation(ir);
+  Serial.print("error:")
+  Serial.println(error);  // also debugging
+  Serial.print("pid value:");
   pid=getpid(); // pid error value
   analogWrite(lmotor,bsl+pid);
   analogWrite(lmotorn, 0);
@@ -220,10 +222,10 @@ void loop() {
 
 
 
-int perr;
-int p, i=0, d;
-int kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
-int pid;
+float perr;
+float p, i=0, d;
+float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
+float pid;
 
 
 float getpid() {
