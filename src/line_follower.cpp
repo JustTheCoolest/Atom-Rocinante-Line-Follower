@@ -75,10 +75,12 @@ void digitaliseData(int sensor_data[], int n = 8){
   // Function has to be written
 }
 
+// Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
+
 
 bool hasStreak(int const sensor_data[], int const n = 8){
   for(int i=0; i<n-1; ++i){
-    if(sensor_data[i] && sensor_data[i+1]){
+    if(sensor_data[i] && sensor_data[i+1]){ // Bug: 101
       return true;
     }
   }
@@ -116,6 +118,20 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
     }
     i = j;
   }
+}
+
+
+void testFilterSensors(){
+  int test_data[][2][8] = {
+    {{0, 0, 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0, 0}}, // blank
+    {{0, 0, 0, 1, 0, 0, 1, 0},{0, 0, 0, 1, 0, 0, 1, 0}}, // single ones, undifferentiable between real data and noise
+    {{1, 1, 1, 0, 0, 0, 0, 0},{1, 1, 1, 0, 0, 0, 0, 0}}, // Simple streak
+    {{1, 1, 1, 0, 0, 1, 0, 0}, {1, 1, 1, 0, 0, 0, 0, 0}}, // Stray correction
+    {{1, 1, 1, 0, 0, 1, 0, 1}, {1, 1, 1, 0, 0, 1, 0, 1}}, // Dual streak with gap in between one. Single gaps are also considered part of the streak cause what if the gap...
+    // ...actuallly the error and not the 1s
+    {{1, 1, 1, 0, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0, 0, 0}}, // Streak with gap and stray
+    {{0, 1, 0, 0, 0, 1, 0, 1}, {0, 0, 0, 0, 0, 1, 0, 1}}  // Stray to the left of streak //flag
+    };
 }
 
 
