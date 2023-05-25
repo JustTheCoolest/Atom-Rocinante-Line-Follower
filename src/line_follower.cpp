@@ -101,43 +101,53 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 }
 */
 
-/*
+bool hasStreak(int const sensor_data[], int const n = 8){
+  for(int i=0; i<n-1; ++i){
+    if(sensor_data[i] && sensor_data[i+1]){
+      return true;
+    }
+  }
+  return false;
+}
+
 int findEndOfStreak(int sensor_data[], int j, int n = 8){
-  ++j;
-  bool padding_check_flag;
-  while(j<n-2){
-    // if(!sensor_data[i]){ // idk what the problem even is here
+  for(++j; j<n-2; ++j){
+    if(!sensor_data[j]){
       if(!sensor_data[++j]){
         return j+1;
       }
       continue;
     }
-    ++j;
   }
-  return n;
+  return -1;
 }
-*/
+
+
 void filterSensors(int sensor_data[] = ir, int n = 8){
-  bool streak_flag = false;
-  for(int i=0; i<n-1; ++i){
-    if(sensor_data[i] && sensor_data[i+1]){
-      streak_flag = true;
-      break;
-    }
+  if(!hasStreak){
+    return; // // If there is no streak, a single 1 is not treated as noise, it could be our true data
   }
-  if(!streak_flag){
-    return;
-  }
-  bool padding_check_flag;
+
+  //bool padding_check_flag;
   for(int i=0; i<n; ++i){
     if(!sensor_data[i]){
       continue;
     }
+    int j = findEndOfStreak(sensor_data, i);
+    if(j<-1){
+      return;
+    }
+    if(j==i+3){
+      sensor_data[i] = 0;
+    }
+    i = j;
+
+    /*
     padding_check_flag = true;
     for(int j=i; j<min(i+2, n); ++j){
       if(sensor_data[j]){
         padding_check_flag = false;
-  //      i = findEndOfStreak(sensor_data, j); remove comment once function is ok
+        i = findEndOfStreak(sensor_data, j);
         break;
       }
     }
@@ -145,12 +155,9 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
       sensor_data[i] = 0;
       i+=2;
     }
+    */
   }
 }
-
-
-
-
 
 
 float getDeviation(int sensor_data[], int n = 8){
