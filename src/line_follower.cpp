@@ -77,7 +77,7 @@ void digitaliseData(int sensor_data[], int n = 8){
 
 // Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
 
-
+/*
 bool hasStreak(int const sensor_data[], int const n = 8){
   for(int i=0; i<n-1; ++i){
     if(sensor_data[i] && sensor_data[i+1]){ // Bug: 101
@@ -86,12 +86,14 @@ bool hasStreak(int const sensor_data[], int const n = 8){
   }
   return false;
 }
+*/
 
 
-int findEndOfStreak(int sensor_data[], int j, int n = 8){
+int findEndOfStreak(int sensor_data[], bool *streak_present, int j, int const n = 8){
   for(++j; j<n-2; ++j){
     if(!sensor_data[j]){
       if(!sensor_data[++j]){
+        *streak_present = true;
         return j+1;
       }
       continue;
@@ -102,14 +104,17 @@ int findEndOfStreak(int sensor_data[], int j, int n = 8){
 
 
 void filterSensors(int sensor_data[] = ir, int n = 8){
+  bool streak_present = false;
+  /*
   if(!hasStreak(sensor_data)){
     return; // // If there is no streak, a single 1 is not treated as noise, it could be our true data
   }
+  */
   for(int i=0; i<n; ++i){
     if(!sensor_data[i]){
       continue;
     }
-    int j = findEndOfStreak(sensor_data, i);
+    int j = findEndOfStreak(sensor_data, &streak_present, i);
     if(j<-1){
       return;
     }
