@@ -1,4 +1,6 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
+#include <assert.h>
+
 
 float error;
 
@@ -126,6 +128,16 @@ void filterSensors(int sensor_data[] = ir, int n = 8){
 }
 
 
+bool isEqual(int const a[], int const b[], int const n = 8){
+  for(int i=0; i<n; ++i){
+    if(a[i]!=b[i]){
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void testFilterSensors(){
   int test_data[][2][8] = {
     {{0, 0, 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0, 0}}, // blank
@@ -136,7 +148,14 @@ void testFilterSensors(){
     // ...actuallly the error and not the 1s
     {{1, 1, 1, 0, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0, 0, 0}}, // Streak with gap and stray
     {{0, 1, 0, 0, 0, 1, 0, 1}, {0, 0, 0, 0, 0, 1, 0, 1}}  // Stray to the left of streak //flag
-    };
+  };
+  int const n=8;
+  for(int unsigned i=0; i<sizeof(test_data); ++i){
+    int *sensor_data = test_data[i][0];
+    int *expected = test_data[i][1];
+    filterSensors(sensor_data);
+    assert (isEqual(sensor_data, expected, n));
+  }
 }
 
 
