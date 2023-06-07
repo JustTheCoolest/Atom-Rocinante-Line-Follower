@@ -116,7 +116,7 @@ void testFilterSensors(){
 
 
 float getDeviation(int sensor_data[], int n = 8){
-  float index_shift = n/2+0.5;  // 3.5
+  float index_shift = n/2-0.5;  // 3.5
   int number_of_high_sensors = 0; 
   float sum_of_high_sensors = 0;
   for(int i=0; i<n; i++){
