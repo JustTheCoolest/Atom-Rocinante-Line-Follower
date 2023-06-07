@@ -1,225 +1,227 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
-
-
+//#include <assert.h>
 
 
 float error;
 
-  
-  
-  float error;
-  
-  
-  // Pin list
-  int lmotor = 0;
-  int lmotorn = 0;
-  int rmotor = 0;
-  int rmotorn = 0;
-  int ir1 = 2;
-  int ir2 = 3;
-  int ir3 = 4;
-  int ir4 = 5;
-  int ir5 = 6;
-  int ir6 = 7;
-  int ir7 = 8;
-  int ir8 = 9;
-  int bsl = 127; // analogWrite base speed for left motor
-  int bsr = 127; // analogWrite base speed for right motor 
-  int pins[8] = {ir1, ir2, ir3, ir4, ir5, ir6, ir7, ir8};
-  int ir[8];
-  
-  
-  
-  
-  void setup() {
-    // put your setup code here, to run once:
-    pinMode(1, INPUT);     // Motor pins were 3,9 and 10,11. From Haridutt.
-    pinMode(2, INPUT);     
-    pinMode(3, INPUT);     // but it can and will be subject to change
-    pinMode(4, INPUT);     // DO NOT CHANGE THE IR SENSOR BOARD PINS TO OUTPUT! IT WILL TURN OFF THE SENSOR BOARD. PLEASE DEFINE THE MODES PROPER.
-    pinMode(5, INPUT);
-    pinMode(6, INPUT);
-    pinMode(7, INPUT);
-    pinMode(8, INPUT);
-    pinMode(9, INPUT);
-    pinMode(10, INPUT);
-    pinMode(11, INPUT);
-    pinMode(12, INPUT);
-    Serial.begin(9600);
+
+// Pin list
+int lmotor = 3;
+int lmotorn = 9;
+int rmotor = 10;
+int rmotorn = 11;
+byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
+
+int bsl = 127; // analogWrite base speed for left motor
+int bsr = 127; // analogWrite base speed for right motor 
+
+int ir[8];
+
+// Task: Convert sensor reads to analog values
+
+
+void sensorsDigitalRead(int sensor_data[], byte pins[], int n = 8){
+  for(int i=0; i<n; i++){
+    sensor_data[i] = digitalRead(pins[i]);
   }
-  
-  // Task: Convert sensor reads to analog values
-  
-  
-  
-  
-  void sensorsRead(int *sensor_data = ir, int *pins = pins, int n = 8){
-    for(int i=0; i<n; i++){
-      sensor_data[i] = digitalRead(pins[i]);
+}
+
+void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
+  for(int i=0; i<n; i++){
+    sensor_data[i] = analogRead(pins[i]);
+  }
+}
+
+void printArray(int array[], int n=8){
+  for(int i=0; i<n; ++i){
+    Serial.print(array[i]);
+    Serial.print(" ");
+  }
+  Serial.print("\n");
+}
+
+void digitaliseData(int sensor_data[], int n = 8){
+  // Function has to be written
+}
+
+// Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
+
+
+int findEndOfStreak(int sensor_data[], bool *streak_present, int j, int const n = 8){
+  for(++j; j<n-2; ++j){
+    if(!sensor_data[j]){
+      if(!sensor_data[++j]){
+        *streak_present = true;
+        return j+1;
+      }
+      continue;
     }
   }
-  
+  return -1;
+}
+
+
+void filterSensors(int sensor_data[] = ir, int n = 8){
+  bool streak_present = false;
   /*
-  int checkStreakMembership(int sensor_data[], int i, int n = 8){
-    for(int j=i+1; j<i+3; ++j){ // At least 2 bits ahead should be 0
-      if(sensor_data[j]){
-        while(j<n-2 && sensor_data[j] && !sensor_data[j+1]){ // To find end of streak + 2 consecutive 0s
-          ++j;
-        }
-        return j+2; // Return the index from which to continue checking
-      }
-    }
-    return -1; // Stray
-  }
-  
-  
-  void filterSensors(int sensor_data[] = ir, int n = 8){
-    bool streak_flag = false;
-    for(int i=0; i<n; ++i){
-      if(!sensor_data[i]){
-        continue;
-      }
-  
-      if(streak_flag){
-        if(!sensor_data[++i] && !sensor_data[++i]){
-        }
-        i+=2;
-        continue;
-      }
-      
-      int jump_index = checkStreakMembership(sensor_data, i);
-      if(jump_index == -1){
-        if(streak_flag){
-          sensor_data[i] = 0;
-          continue;
-        }
-        else{
-          // Recurse
-        }
-      }
-      streak_flag = true;
-      i = jump_index;
-    }
+  if(!hasStreak(sensor_data)){
+    return; // // If there is no streak, a single 1 is not treated as noise, it could be our true data
   }
   */
-  
-  /*
-  int findEndOfStreak(int sensor_data[], int j, int n = 8){
-    ++j;
-    bool padding_check_flag;
-    while(j<n-2){
-      // if(!sensor_data[i]){ // idk what the problem even is here
-        if(!sensor_data[++j]){
-          return j+1;
-        }
-        continue;
-      }
-      ++j;
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      continue;
     }
-    return n;
-  }
-  */
-/*  void filterSensors(int sensor_data[] = ir, int n = 8){
-    bool streak_flag = false;
-    for(int i=0; i<n-1; ++i){
-      if(sensor_data[i] && sensor_data[i+1]){
-        streak_flag = true;
-        break;
-      }
-    }
-    if(!streak_flag){
+    int j = findEndOfStreak(sensor_data, &streak_present, i);
+    if(j<-1){
       return;
     }
-    bool padding_check_flag;
-    for(int i=0; i<n; ++i){
-      if(!sensor_data[i]){
-        continue;
-      }
-      padding_check_flag = true;
-      for(int j=i; j<min(i+2, n); ++j){
-        if(sensor_data[j]){
-          padding_check_flag = false;
-    //      i = findEndOfStreak(sensor_data, j); remove comment once function is ok
-          break;
-        }
-      }
-      if(padding_check_flag){
-        sensor_data[i] = 0;
-        i+=2;
-      }
+    if(j==i+3){
+      sensor_data[i] = 0;
     }
-  }*/
-  
-  
-  
-  
-  
-  
-  float getDeviation(int sensor_data[], int n = 8){
-    float index_shift = n/2+0.5;  // 3.5
-    int number_of_high_sensors = 0; 
-    float sum_of_high_sensors = 0;
-    for(int i=0; i<n; i++){
-      if(sensor_data[i]){
-        number_of_high_sensors += 1; // number of on sensors
-       
-        sum_of_high_sensors += i-(index_shift); // adding on sensors based on their position on the ir board -- used to calculate deviation
-      }
-    }
-    if(!number_of_high_sensors){
-      return 0;  // edge case handling -- if everything is zero, return 0 instead of NaN
-    }
-    float deviation = -sum_of_high_sensors/number_of_high_sensors; // error value for pid
-    return deviation;
+    i = j;
   }
-  
-  // Task : Stop at full black
-  
-  
-  
-  float perr;
-  float p, i=0, d;
-  float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
-  float pid;
-  
-  
-  float getpid() {
-    perr = error;
-    p = error;
-    if (error==0) {
-      i = 0;  
+}
+
+
+bool isEqual(int const a[], int const b[], int const n = 8){
+  for(int i=0; i<n; ++i){
+    if(a[i]!=b[i]){
+      return false;
     }
-    else {
-      i = i+error;
-    }
-    d = error-perr;
-    pid = (kp*p)+(ki*i)+(kd*d);
-    return pid;
   }
-  
-  void loop() {
-    sensorsRead(); // get ir values
-    for(int i=0;i<8;i++) {
-    Serial.print(ir[i]); // debugging sensor readings
-    }
-    Serial.println(" ");
-    error=getDeviation(ir);
-    Serial.print("error:");
-    Serial.println(error);  // debugging deviation value 
-    Serial.print("pid value:");
-    pid=getpid(); // pid error value
-    Serial.println(pid);
-    analogWrite(lmotor,bsl+pid);
-    analogWrite(lmotorn, 0);
-    analogWrite(rmotor, bsl-pid);
-    analogWrite(rmotorn, 0);
-    
-    // int op = digitalread(ir_pin);
-    delay(250);
-      // put your main code here, to run repeatedly:
-  
-  
+  return true;
+}
+
+
+void testFilterSensors(){
+  int test_data[][2][8] = {
+    {{0, 0, 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0, 0}}, // blank
+    {{0, 0, 0, 1, 0, 0, 1, 0},{0, 0, 0, 1, 0, 0, 1, 0}}, // single ones, undifferentiable between real data and noise
+    {{1, 1, 1, 0, 0, 0, 0, 0},{1, 1, 1, 0, 0, 0, 0, 0}}, // Simple streak
+    {{1, 1, 1, 0, 0, 1, 0, 0}, {1, 1, 1, 0, 0, 0, 0, 0}}, // Stray correction
+    {{1, 1, 1, 0, 0, 1, 0, 1}, {1, 1, 1, 0, 0, 1, 0, 1}}, // Dual streak with gap in between one. Single gaps are also considered part of the streak cause what if the gap...
+    // ...actuallly the error and not the 1s
+    {{1, 1, 1, 0, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0, 0, 0}}, // Streak with gap and stray
+    {{0, 1, 0, 0, 0, 1, 0, 1}, {0, 0, 0, 0, 0, 1, 0, 1}}  // Stray to the left of streak //flag
+  };
+  int const n=8;
+  for(int unsigned i=0; i<sizeof(test_data); ++i){
+    int *sensor_data = test_data[i][0];
+    int *expected = test_data[i][1];
+    filterSensors(sensor_data);
+    //assert(isEqual(sensor_data, expected, n));
   }
+}
+
+
+float getDeviation(int sensor_data[], int n = 8){
+  float index_shift = n/2-0.5;  // 3.5
+  int number_of_high_sensors = 0; 
+  float sum_of_high_sensors = 0;
+  for(int i=0; i<n; i++){
+    if(sensor_data[i]){
+      number_of_high_sensors += 1; // number of on sensors
+     
+      sum_of_high_sensors += i-(index_shift); // adding on sensors based on their position on the ir board -- used to calculate deviation
+    }
+  }
+  if(!number_of_high_sensors){
+    return 0;  // edge case handling -- if everything is zero, return 0 instead of NaN
+  }
+  float deviation = -sum_of_high_sensors/number_of_high_sensors; // error value for pid
+  return deviation;
+}
+
+// Task : Stop at full black
+
+
+float perr;
+float p, i=0, d;
+float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
+float pid;
+
+
+float getpid() {
+  perr = error;
+  p = error;
+  if (error==0) {
+    i = 0;  
+  }
+  else {
+    i = i+error;
+  }
+  d = error-perr;
+  pid = (kp*p)+(ki*i)+(kd*d);
+  return pid;
+}
+
+
+void calibrate(int thresholds[], byte const pins[], int const n = 8){
+  digitalWrite(lmotor,HIGH);
+  digitalWrite(lmotorn,LOW);
+  digitalWrite(rmotor,LOW);
+  digitalWrite(rmotorn,HIGH);
+  int sensorData[n];
+  int minValues[n], maxValues[n];
+  for(int i=0; i<50; ++i){
+    sensorsRead(sensorData, pins, n);
+    for(int j=0; j<n; ++j){
+      if(sensorData[j]<minValues[j] || i==0){
+        minValues[j] = sensorData[j];
+      }
+      if(sensorData[j]>maxValues[j] || i==0){
+        maxValues[j] = sensorData[j];
+      }
+      printArray(sensorData);
+    }
+    Serial.print("\n");
+    printArray(minValues);
+    printArray(maxValues);
+  }
+  for(int i=0; i<n; ++i){
+    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
+  }
+  digitalWrite(lmotor, HIGH);
+  digitalWrite(lmotorn, HIGH);
+  digitalWrite(rmotor, HIGH);
+  digitalWrite(rmotorn, HIGH);
+}
+
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(3, OUTPUT);     // Motor pins
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  Serial.begin(9600);
+  for(int i=0; i<8; ++i){
+    pinMode(ir[i], INPUT);
+  }
+  // testFilterSensors();
+}
+
+void loop() {
+  sensorsRead(ir, pins); // get ir values
+
+  // printArray(ir);
+  digitaliseData(ir); // Function not yet written
+
+  for(int i=0;i<8;i++) {
+  Serial.print(ir[i]); // debugging
+  }
+  Serial.println(" ");
+  error=getDeviation(ir);
+  Serial.print("error:");
+  Serial.println(error);  // also debugging
+  Serial.print("pid value:");
+  pid=getpid(); // pid error value
+  analogWrite(lmotor,bsl+pid);
+  analogWrite(lmotorn, 0);
+  analogWrite(rmotor, bsl-pid);
+  analogWrite(rmotorn, 0);
   
-  
-  
+  // int op = digitalread(ir_pin);
+  delay(250);
+}
