@@ -40,8 +40,10 @@ void printArray(int array[], int n=8){
   Serial.print("\n");
 }
 
-void digitaliseData(int sensor_data[], int n = 8){
-  // Function has to be written
+void digitaliseData(int sensor_data[], int const thresholds[], int const  n = 8){
+  for(int i=0; i<n; ++i){
+    sensor_data[i] = sensor_data[i] > thresholds[i];
+  }
 }
 
 // Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
@@ -157,11 +159,23 @@ float getpid() {
 }
 
 
-void calibrate(int thresholds[], byte const pins[], int const n = 8){
+void startSpinning(){
   digitalWrite(lmotor,HIGH);
   digitalWrite(lmotorn,LOW);
   digitalWrite(rmotor,LOW);
   digitalWrite(rmotorn,HIGH);
+}
+
+void stopMoving(){
+  digitalWrite(lmotor, HIGH);
+  digitalWrite(lmotorn, HIGH);
+  digitalWrite(rmotor, HIGH);
+  digitalWrite(rmotorn, HIGH);
+}
+
+
+void calibrate(int thresholds[], byte const pins[], int const n = 8){
+  startSpinning();
   int sensorData[n];
   int minValues[n], maxValues[n];
   for(int i=0; i<50; ++i){
@@ -173,21 +187,15 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
       if(sensorData[j]>maxValues[j] || i==0){
         maxValues[j] = sensorData[j];
       }
-      printArray(sensorData);
     }
-    Serial.print("\n");
-    printArray(minValues);
-    printArray(maxValues);
   }
   for(int i=0; i<n; ++i){
     thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
   }
-  digitalWrite(lmotor, HIGH);
-  digitalWrite(lmotorn, HIGH);
-  digitalWrite(rmotor, HIGH);
-  digitalWrite(rmotorn, HIGH);
+  stopMoving();
 }
 
+int thresholds[8];
 
 void setup() {
   // put your setup code here, to run once:
@@ -200,18 +208,13 @@ void setup() {
     pinMode(ir[i], INPUT);
   }
   // testFilterSensors();
+  calibrate(thresholds, pins);
 }
 
 void loop() {
   sensorsRead(ir, pins); // get ir values
-
   // printArray(ir);
-  digitaliseData(ir); // Function not yet written
-
-  for(int i=0;i<8;i++) {
-  Serial.print(ir[i]); // debugging
-  }
-  Serial.println(" ");
+  digitaliseData(ir, thresholds); // Function not yet written
   error=getDeviation(ir);
   Serial.print("error:");
   Serial.println(error);  // also debugging
@@ -223,5 +226,4 @@ void loop() {
   analogWrite(rmotorn, 0);
   
   // int op = digitalread(ir_pin);
-  delay(250);
 }
