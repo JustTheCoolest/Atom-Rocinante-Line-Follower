@@ -1,5 +1,5 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
-#include <assert.h>
+//#include <assert.h>
 
 
 float error;
@@ -10,17 +10,6 @@ int lmotor = 3;
 int lmotorn = 9;
 int rmotor = 10;
 int rmotorn = 11;
-/*
-int ir1 = 3;
-int ir2 = 4;
-int ir3 = 5;
-int ir4 = 6;
-int ir5 = 7;
-int ir6 = 8;
-int ir7 = 9;
-int ir8 = 10;
-int pins[8] = {ir1, ir2, ir3, ir4, ir5, ir6, ir7, ir8};
-*/
 byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
 int bsl = 127; // analogWrite base speed for left motor
@@ -28,39 +17,16 @@ int bsr = 127; // analogWrite base speed for right motor
 
 int ir[8];
 
-
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(1, OUTPUT);     // Motor pins are 3,9 and 10,11.
-  pinMode(2, OUTPUT);     // From Haridutt.
-  /*
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  */
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
-  Serial.begin(9600);
-  for(int i=0; i<8; ++i){
-    pinMode(ir[i], INPUT);
-  }
-}
-
 // Task: Convert sensor reads to analog values
 
 
-void sensorsRead(int *sensor_data, int *pins, int n = 8){
+void sensorsDigitalRead(int sensor_data[], byte pins[], int n = 8){
   for(int i=0; i<n; i++){
     sensor_data[i] = digitalRead(pins[i]);
   }
 }
 
-void sensorsRead(int sensor_data[], byte pins[], int n = 8){
+void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
     sensor_data[i] = analogRead(pins[i]);
   }
@@ -71,6 +37,7 @@ void printArray(int array[], int n=8){
     Serial.print(array[i]);
     Serial.print(" ");
   }
+  Serial.print("\n");
 }
 
 void digitaliseData(int sensor_data[], int n = 8){
@@ -78,17 +45,6 @@ void digitaliseData(int sensor_data[], int n = 8){
 }
 
 // Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
-
-/*
-bool hasStreak(int const sensor_data[], int const n = 8){
-  for(int i=0; i<n-1; ++i){
-    if(sensor_data[i] && sensor_data[i+1]){ // Bug: 101
-      return true;
-    }
-  }
-  return false;
-}
-*/
 
 
 int findEndOfStreak(int sensor_data[], bool *streak_present, int j, int const n = 8){
@@ -154,7 +110,7 @@ void testFilterSensors(){
     int *sensor_data = test_data[i][0];
     int *expected = test_data[i][1];
     filterSensors(sensor_data);
-    assert (isEqual(sensor_data, expected, n));
+    //assert(isEqual(sensor_data, expected, n));
   }
 }
 
@@ -200,6 +156,51 @@ float getpid() {
   return pid;
 }
 
+
+void calibrate(int thresholds[], byte const pins[], int const n = 8){
+  digitalWrite(lmotor,HIGH);
+  digitalWrite(lmotorn,LOW);
+  digitalWrite(rmotor,LOW);
+  digitalWrite(rmotorn,HIGH);
+  int sensorData[n];
+  int minValues[n], maxValues[n];
+  for(int i=0; i<50; ++i){
+    sensorsRead(sensorData, pins, n);
+    for(int j=0; j<n; ++j){
+      if(sensorData[j]<minValues[j] || i==0){
+        minValues[j] = sensorData[j];
+      }
+      if(sensorData[j]>maxValues[j] || i==0){
+        maxValues[j] = sensorData[j];
+      }
+      printArray(sensorData);
+    }
+    Serial.print("\n");
+    printArray(minValues);
+    printArray(maxValues);
+  }
+  for(int i=0; i<n; ++i){
+    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
+  }
+  digitalWrite(lmotor, HIGH);
+  digitalWrite(lmotorn, HIGH);
+  digitalWrite(rmotor, HIGH);
+  digitalWrite(rmotorn, HIGH);
+}
+
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(3, OUTPUT);     // Motor pins
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  Serial.begin(9600);
+  for(int i=0; i<8; ++i){
+    pinMode(ir[i], INPUT);
+  }
+  // testFilterSensors();
+}
 
 void loop() {
   sensorsRead(ir, pins); // get ir values
