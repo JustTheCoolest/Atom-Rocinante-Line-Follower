@@ -134,14 +134,36 @@ float getDeviation(int sensor_data[], int n = 8){
 
 // Task : Stop at full black
 
+  float current_pos;  //PID error
+  float set_pos=0;    //Sensor 4,5 go high
+  float reset,prev_error;
+  unsigned long int prev_time;
 
 //float perr;
 //float p, i=0, d;
 float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
 float pid;
 float prev_error;
-float prev_time;
 
+signed  int value_assign[8]={-4,-3,-2,-1,1,2,3,4};
+
+  //Find position of line
+float getPosition(bool const dig_ir[]){
+    int high_sensors=0;
+    int sum_high=0;
+    for(int i=0;i<8;i++){
+      if (dig_ir[i]==1) high_sensors +=1;
+      sum_high +=dig_ir[i]*value_assign[i];
+    }
+    if(high_sensors==0) return 0;   // if everything is zero, return 0 instead of NaN check this line
+    
+   /* Serial.print(" No of sensor high");  //For debugging
+    Serial.print(high_sensors);
+    Serial.print(" Sum");
+    Serial.print(sum_high);*/
+    float Position=sum_high/high_sensors;
+    return Position;
+}
 
 float getPID()
 {
@@ -222,7 +244,7 @@ void setup() {
   pinMode(11, OUTPUT);
   Serial.begin(9600);
   for(int i=0; i<8; ++i){
-    pinMode(ir[i], INPUT);
+    pinMode(ir[i], INPUT); // Try removing the decalration if it doesn't work
   }
   // testFilterSensors();
   calibrate(thresholds, pins);
@@ -230,22 +252,16 @@ void setup() {
 
 void loop() 
 {
-  for( int i=0;i<8;i++)
-  {
-  sensorsRead(ir[i], pins[i]); // get ir values
-  }
-  // printArray(ir);
-
-  digitaliseData(ir, thresholds); // Function not yet written
+  int sensor_data[8];
+sensorsRead(sensor_data, pins);
+digitaliseData(ir, thresholds); // Function not yet written
   error=getDeviation(ir);
   Serial.print("error:");
   Serial.println(error);  // also debugging
   Serial.print("pid value:");
 
   pid=getPID(); // pid error value
-sensorsRead(sensor_data,pins,n=8);
-printArray(array,n=8);
-  writeMotors(pid,sensor_data[i]);
+  writeMotors(pid,sensor_data);
 
   
   // int op = digitalread(ir_pin);
