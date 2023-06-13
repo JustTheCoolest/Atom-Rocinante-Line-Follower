@@ -1,5 +1,5 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
-//#include <assert.h>
+#include <assert.h>
 
 
 float error;
@@ -20,11 +20,7 @@ int ir[8];
 // Task: Convert sensor reads to analog values
 
 
-void sensorsDigitalRead(int sensor_data[], byte pins[], int n = 8){
-  for(int i=0; i<n; i++){
-    sensor_data[i] = digitalRead(pins[i]);
-  }
-}
+
 
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
@@ -40,7 +36,8 @@ void printArray(int array[], int n=8){
   Serial.print("\n");
 }
 
-void digitaliseData(int sensor_data[], int const thresholds[], int const  n = 8){
+void digitaliseData(int sensor_data[], int const thresholds[], int const  n = 8)
+{
   for(int i=0; i<n; ++i){
     sensor_data[i] = sensor_data[i] > thresholds[i];
   }
@@ -138,39 +135,58 @@ float getDeviation(int sensor_data[], int n = 8){
 // Task : Stop at full black
 
 
-float perr;
-float p, i=0, d;
+//float perr;
+//float p, i=0, d;
 float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
 float pid;
+float prev_error;
+float prev_time;
 
 
-float getpid() {
-  perr = error;
-  p = error;
-  if (error==0) {
-    i = 0;  
-  }
-  else {
-    i = i+error;
-  }
-  d = error-perr;
-  pid = (kp*p)+(ki*i)+(kd*d);
+float getPID()
+{
+  //Error is the difference between the postion of the bot and the position we want it to be
+  unsigned long current_time=millis();
+  double del_time=current_time-prev_time;
+
+  float error=set_pos-current_pos;                         //Steady state error
+  reset += error*del_time;                                 //Reset-The small errors that get accumulated over time *reset gets added over time , hence global variable
+  float rate_error= error-prev_error/del_time;             //Rate of change of error
+
+  float pid=kp*(error) + ki*(reset) + kd*(rate_error);     //Calculate PID value
+
+  prev_error=error;
+  prev_time=current_time;
+
   return pid;
+  
 }
+void writeMotors(const int pid, const int sensor_data[]){
+    for(int i=0; i<8; ++i)
+    {
+      if(sensor_data[i])
+      {
+        analogWrite(lmotor,bsl-pid);          //Check pid values, direction of turning and adjust
+        analogWrite(rmotor,bsl+pid);
+        break;
+      }
+    }
+}
+
 
 
 void startSpinning(){
-  digitalWrite(lmotor,HIGH);
-  digitalWrite(lmotorn,LOW);
-  digitalWrite(rmotor,LOW);
-  digitalWrite(rmotorn,HIGH);
+  analogWrite(lmotor,255);
+  analogWrite(lmotorn,0);
+  analogWrite(rmotor,0);
+  analogWrite(rmotorn,255);
 }
 
 void stopMoving(){
-  digitalWrite(lmotor, HIGH);
-  digitalWrite(lmotorn, HIGH);
-  digitalWrite(rmotor, HIGH);
-  digitalWrite(rmotorn, HIGH);
+  analogWrite(lmotor, 255);
+  analogWrite(lmotorn, 255);
+  analogWrite(rmotor, 255);
+  analogWrite(rmotorn, 255);
 }
 
 
@@ -189,6 +205,7 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
       }
     }
   }
+  // is this for stopping when everything is black?
   for(int i=0; i<n; ++i){
     thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
   }
@@ -211,19 +228,27 @@ void setup() {
   calibrate(thresholds, pins);
 }
 
-void loop() {
-  sensorsRead(ir, pins); // get ir values
+void loop() 
+{
+  for( int i=0;i<8;i++)
+  {
+  sensorsRead(ir[i], pins[i]); // get ir values
+  }
   // printArray(ir);
+
   digitaliseData(ir, thresholds); // Function not yet written
   error=getDeviation(ir);
   Serial.print("error:");
   Serial.println(error);  // also debugging
   Serial.print("pid value:");
-  pid=getpid(); // pid error value
-  analogWrite(lmotor,bsl+pid);
-  analogWrite(lmotorn, 0);
-  analogWrite(rmotor, bsl-pid);
-  analogWrite(rmotorn, 0);
+
+  pid=getPID(); // pid error value
+sensorsRead(sensor_data,pins,n=8);
+printArray(array,n=8);
+  writeMotors(pid,sensor_data[i]);
+
   
   // int op = digitalread(ir_pin);
 }
+
+
