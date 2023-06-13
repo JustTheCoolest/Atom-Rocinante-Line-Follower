@@ -143,7 +143,6 @@ float getDeviation(int sensor_data[], int n = 8){
 //float p, i=0, d;
 float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
 float pid;
-float prev_error;
 
 signed  int value_assign[8]={-4,-3,-2,-1,1,2,3,4};
 
