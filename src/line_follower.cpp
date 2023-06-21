@@ -1,5 +1,5 @@
 #include <Arduino.h> // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
-#include <assert.h>
+//#include <assert.h>
 
 
 float error;
@@ -46,7 +46,7 @@ void digitaliseData(int sensor_data[], int const thresholds[], int const  n = 8)
 // Alternative: Implement both hasStreak and findEndOfStreak as two instances of a sequence detector
 
 
-int findEndOfStreak(int sensor_data[], bool *streak_present, int j, int const n = 8){
+int findEndOfStreak(const int sensor_data[], bool *streak_present, int j, int const n = 8){
   for(++j; j<n-2; ++j){
     if(!sensor_data[j]){
       if(!sensor_data[++j]){
@@ -141,7 +141,7 @@ float getDeviation(int sensor_data[], int n = 8){
 
 //float perr;
 //float p, i=0, d;
-float kp=0.6, ki=0.4, kd=0.6; // these values need tweaking 
+float kp=70, ki=0, kd=0; // these values need tweaking 
 float pid;
 
 signed  int value_assign[8]={-4,-3,-2,-1,1,2,3,4};
@@ -196,11 +196,9 @@ void writeMotors(const int pid, const int sensor_data[]){
 
 
 
-void startSpinning(){
-  analogWrite(lmotor,255);
-  analogWrite(lmotorn,0);
-  analogWrite(rmotor,0);
-  analogWrite(rmotorn,255);
+void startSpinning(int const spin){
+  analogWrite(lmotor,255-spin);
+  analogWrite(rmotor,spin);
 }
 
 void stopMoving(){
@@ -212,10 +210,10 @@ void stopMoving(){
 
 
 void calibrate(int thresholds[], byte const pins[], int const n = 8){
-  startSpinning();
+  startSpinning(255);
   int sensorData[n];
   int minValues[n], maxValues[n];
-  for(int i=0; i<50; ++i){
+  for(int i=0; i<200; ++i){
     sensorsRead(sensorData, pins, n);
     for(int j=0; j<n; ++j){
       if(sensorData[j]<minValues[j] || i==0){
@@ -224,6 +222,7 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
       if(sensorData[j]>maxValues[j] || i==0){
         maxValues[j] = sensorData[j];
       }
+      delay(1);
     }
   }
   // is this for stopping when everything is black?
@@ -231,6 +230,37 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
     thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
   }
   stopMoving();
+}
+
+int findEndOfStreak(int const sensor_data[], int j, int const n = 8){
+  bool junk;
+  return findEndOfStreak(sensor_data, &junk, j, n);
+}
+
+void swap(int *const a, int *const b){
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+void reverseArray(int array[], const int n){
+  for(int i=0; i<n/2; ++i){
+    swap(&array[i], &array[n-i]);
+  }
+}
+
+void findTurn(int sensor_data[], int const line_thickness, int const n = 8){
+  // Find deviation must be called before this function
+  if(findEndOfStreak(sensor_data, -1)>line_thickness+1){ // +1 for confidence
+    startSpinning(0);
+    return;
+  }
+  reverseArray(sensor_data, n);
+  if(findEndOfStreak(sensor_data, -1)>line_thickness+1){ // +1 for confidence
+    startSpinning(255);
+    return;
+  }
+  return;
 }
 
 int thresholds[8];
@@ -252,8 +282,8 @@ void setup() {
 void loop() 
 {
   int sensor_data[8];
-sensorsRead(sensor_data, pins);
-digitaliseData(ir, thresholds); // Function not yet written
+  sensorsRead(sensor_data, pins);
+  digitaliseData(ir, thresholds); // Function not yet written
   error=getDeviation(ir);
   Serial.print("error:");
   Serial.println(error);  // also debugging
