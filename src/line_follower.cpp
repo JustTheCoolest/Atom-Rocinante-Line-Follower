@@ -52,16 +52,22 @@ float getPID(float error)
   return pid;
   
 }
+
 void writeMotors(const int pid, const int sensor_data[]){
-    for(int i=0; i<8; ++i)
+  for(int i=0; i<8; ++i)
+  {
+    if(sensor_data[i]) // Write motors after finding if at least one of the sensors shows HIGH signal.
+                      // Otherwise, we are off track and hence stop.
     {
-      if(sensor_data[i])
-      {
-        analogWrite(lmotor,bsl-pid);          //Check pid values, direction of turning and adjust
-        analogWrite(rmotor,bsl+pid);
-        break;
-      }
+      int left_motor_pwm = bsl-pid;
+      int right_motor_pwm = bsl+pid;
+      left_motor_pwm = capMotorPWM(left_motor_pwm);
+      right_motor_pwm = capMotorPWM(right_motor_pwm);
+      analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
+      analogWrite(rmotor, right_motor_pwm);
+      return;
     }
+  }
 }
 
 
@@ -157,11 +163,8 @@ void loop()
   Serial.print("error:");
   Serial.println(error);  // also debugging
   Serial.print("pid value:");
-
   pid=getPID(error); // pid error value
   writeMotors(pid,sensor_data);
-
-  
   // int op = digitalread(ir_pin);
 }
 

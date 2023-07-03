@@ -60,3 +60,8 @@ float getDeviation(int sensor_data[], int n = 8){
   float deviation = sum_of_high_sensors/number_of_high_sensors; // error value for pid
   return -deviation; // CONVENTION: LEFT SIDE IS POSITIVE (ROBOT TURNING RIGHT IS POSITIVE)
 }
+
+int capMotorPWM(int const unprocessed_pwm){
+  int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
+  return cappedPWM;
+}
