@@ -34,15 +34,6 @@ void testFilterSensors(){
   }
 }
 
-/*
-class deviation{
-  public:
-  int sensor_data[8];
-  int deviation;
-  deviation(sensor_data, deviation): sensor_data(sensor_data), deviation(deviation){}
-}
-*/
-
 void testGetDeviation(){
   int sensor_datas[5][8] = {
     {0, 0, 0, 0, 0, 0, 0, 0}, 
