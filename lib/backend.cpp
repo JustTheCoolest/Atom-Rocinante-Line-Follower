@@ -42,3 +42,21 @@ void filterSensors(int sensor_data[], int n = 8){
     i = j;
   }
 }
+
+
+float getDeviation(int sensor_data[], int n = 8){
+  float index_shift = n/2-0.5;  // 3.5
+  int number_of_high_sensors = 0; 
+  float sum_of_high_sensors = 0;
+  for(int i=0; i<n; i++){
+    if(sensor_data[i]){
+      number_of_high_sensors += 1; // number of on sensors
+      sum_of_high_sensors += i-(index_shift); // adding on sensors based on their position on the ir board -- used to calculate deviation
+    }
+  }
+  if(!number_of_high_sensors){
+    return 0;  // edge case handling -- if everything is zero, return 0 instead of NaN
+  }
+  float deviation = sum_of_high_sensors/number_of_high_sensors; // error value for pid
+  return -deviation; // CONVENTION: LEFT SIDE IS POSITIVE (ROBOT TURNING RIGHT IS POSITIVE)
+}

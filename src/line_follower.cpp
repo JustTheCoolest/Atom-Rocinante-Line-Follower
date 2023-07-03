@@ -28,25 +28,6 @@ void printArray(int array[], int n=8){
   Serial.print("\n");
 }
 
-
-float getDeviation(int sensor_data[], int n = 8){
-  float index_shift = n/2-0.5;  // 3.5
-  int number_of_high_sensors = 0; 
-  float sum_of_high_sensors = 0;
-  for(int i=0; i<n; i++){
-    if(sensor_data[i]){
-      number_of_high_sensors += 1; // number of on sensors
-     
-      sum_of_high_sensors += i-(index_shift); // adding on sensors based on their position on the ir board -- used to calculate deviation
-    }
-  }
-  if(!number_of_high_sensors){
-    return 0;  // edge case handling -- if everything is zero, return 0 instead of NaN
-  }
-  float deviation = -sum_of_high_sensors/number_of_high_sensors; // error value for pid
-  return deviation;
-}
-
 // Task : Stop at full black
 
   float current_pos;  //PID error
@@ -58,26 +39,6 @@ float getDeviation(int sensor_data[], int n = 8){
 //float p, i=0, d;
 float kp=70, ki=0, kd=0; // these values need tweaking 
 float pid;
-
-signed  int value_assign[8]={-4,-3,-2,-1,1,2,3,4};
-
-  //Find position of line
-float getPosition(bool const dig_ir[]){
-    int high_sensors=0;
-    int sum_high=0;
-    for(int i=0;i<8;i++){
-      if (dig_ir[i]==1) high_sensors +=1;
-      sum_high +=dig_ir[i]*value_assign[i];
-    }
-    if(high_sensors==0) return 0;   // if everything is zero, return 0 instead of NaN check this line
-    
-   /* Serial.print(" No of sensor high");  //For debugging
-    Serial.print(high_sensors);
-    Serial.print(" Sum");
-    Serial.print(sum_high);*/
-    float Position=sum_high/high_sensors;
-    return Position;
-}
 
 float getPID()
 {
@@ -197,7 +158,7 @@ void loop()
 {
   int sensor_data[8];
   sensorsRead(sensor_data, pins);
-  digitaliseData(ir, thresholds); // Function not yet written
+  digitaliseData(ir, thresholds);
   float error=getDeviation(ir);
   Serial.print("error:");
   Serial.println(error);  // also debugging

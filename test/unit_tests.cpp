@@ -34,6 +34,36 @@ void testFilterSensors(){
   }
 }
 
+/*
+class deviation{
+  public:
+  int sensor_data[8];
+  int deviation;
+  deviation(sensor_data, deviation): sensor_data(sensor_data), deviation(deviation){}
+}
+*/
+
+void testGetDeviation(){
+  int sensor_datas[5][8] = {
+    {0, 0, 0, 0, 0, 0, 0, 0}, 
+    {1, 1, 1, 0, 0, 0, 0, 0}, 
+    {0, 0, 0, 0, 1, 1, 1, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 0, 0, 1, 1}
+  };
+  float expected[] = {0, +2.5, -1.5, -0.5, -3};
+  for(int i=0; i<5; ++i){
+    float calculated_value = getPosition(sensor_datas[i]);
+    if(!(calculated_value == expected[i])){
+      printArrayConsole(sensor_datas[i], 8);
+      cout << calculated_value << "!=" << expected[i] << endl;
+    }
+  }
+}
+
+
 int main(){
-  testFilterSensors();
+  testGetDeviation();
+  //testFilterSensors();
+  cout << "Testing complete";
 }
