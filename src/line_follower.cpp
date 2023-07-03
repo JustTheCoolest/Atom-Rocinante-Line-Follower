@@ -30,26 +30,20 @@ void printArray(int array[], int n=8){
 
 // Task : Stop at full black
 
-  float current_pos;  //PID error
-  float set_pos=0;    //Sensor 4,5 go high
-  float reset,prev_error;
-  unsigned long int prev_time;
-
 //float perr;
 //float p, i=0, d;
 float kp=70, ki=0, kd=0; // these values need tweaking 
 float pid;
 
-float getPID()
+float getPID(float error)
 {
+  static float reset,prev_error;
+  static unsigned long int prev_time;
   //Error is the difference between the postion of the bot and the position we want it to be
   unsigned long current_time=millis();
-  double del_time=current_time-prev_time;
-
-  float error=set_pos-current_pos;                         //Steady state error
+  double del_time=current_time-prev_time;                   //Steady state error
   reset += error*del_time;                                 //Reset-The small errors that get accumulated over time *reset gets added over time , hence global variable
-  float rate_error= error-prev_error/del_time;             //Rate of change of error
-
+  float rate_error= (error-prev_error)/del_time;             //Rate of change of error
   float pid=kp*(error) + ki*(reset) + kd*(rate_error);     //Calculate PID value
 
   prev_error=error;
@@ -164,7 +158,7 @@ void loop()
   Serial.println(error);  // also debugging
   Serial.print("pid value:");
 
-  pid=getPID(); // pid error value
+  pid=getPID(error); // pid error value
   writeMotors(pid,sensor_data);
 
   
