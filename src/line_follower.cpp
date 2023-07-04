@@ -55,25 +55,42 @@ void stopMoving(){
   digitalWrite(rmotorn, HIGH);
 }
 
-void writeMotors(const int pid, const int sensor_data[]){
-  static const int base_pwm = 127;
-  for(int i=0; i<8; ++i)
-  {
-    if(sensor_data[i]) // Write motors after finding if at least one of the sensors shows HIGH signal.
-                      // Otherwise, we are off track and hence stop.
-    {
-      int left_motor_pwm = base_pwm+pid;
-      int right_motor_pwm = base_pwm-pid;
-      left_motor_pwm = capMotorPWM(left_motor_pwm);
-      right_motor_pwm = capMotorPWM(right_motor_pwm);
-      analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
-      digitalWrite(lmotorn, HIGH);
-      analogWrite(rmotor, right_motor_pwm);
-      digitalWrite(rmotorn, HIGH);
-      return;
+bool isAllLow(const int sensor_data[], const int n=8){
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      return false;
     }
   }
-  stopMoving();
+  return true;
+}
+
+void writeMotors(const int pid){
+  static const int base_pwm = 40;
+  int left_motor_pwm = base_pwm+pid;
+  int right_motor_pwm = base_pwm-pid;
+  left_motor_pwm = capMotorPWM(left_motor_pwm);
+  right_motor_pwm = capMotorPWM(right_motor_pwm);
+  analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
+  digitalWrite(lmotorn, HIGH);
+  analogWrite(rmotor, right_motor_pwm);
+  digitalWrite(rmotorn, HIGH);
+}
+
+bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1500, const int n=8){
+  if(!isAllLow(sensor_data, n)){
+    return true;
+  }
+  static unsigned long int target_time;
+  static bool response_delay_flag;
+  if(!response_delay_flag){
+    target_time = millis() + response_delay;
+    response_delay_flag = true;
+  }
+  if(millis()>target_time){
+    stopMoving();
+    response_delay_flag = false;
+  }
+  return false;
 }
 
 
@@ -164,11 +181,14 @@ void loop()
   printArray(sensor_data);
   digitaliseData(sensor_data, thresholds);
   printArray(sensor_data);
+  if(!checkWhiteToStopMoving(sensor_data)){
+    return;
+  }
   float error=getDeviation(sensor_data);
   Serial.print(error);
   pid=getPID(error); // pid error value
   Serial.print(pid);
-  writeMotors(pid,sensor_data);
+  writeMotors(pid);
   Serial.print("\n");
   // int op = digitalread(ir_pin);
 }

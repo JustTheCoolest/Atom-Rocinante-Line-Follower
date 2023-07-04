@@ -23,7 +23,7 @@
   int an_ir[8];
   int dig_ir[8];
   
-  float kp = 60 ,ki = 0,kd = 10;
+  float kp = 60 ,ki = 0,kd = -10;
   
 
   void sensorsRead(int sensor_data[]=an_ir, int const pins[]=pins, int n = 8){
@@ -152,31 +152,49 @@ void stopMoving(){
   digitalWrite(rmotorn, HIGH);
 }
 
-void writeMotors(const int pid, const int sensor_data[]=dig_ir){
-  static const int base_pwm = 40;
-  for(int i=0; i<8; ++i)
-  {
-    if(sensor_data[i]) // Write motors after finding if at least one of the sensors shows HIGH signal.
-                      // Otherwise, we are off track and hence stop.
-    {
-      int left_motor_pwm = base_pwm+pid;
-      int right_motor_pwm = base_pwm-pid;
-      left_motor_pwm = capMotorPWM(left_motor_pwm);
-      right_motor_pwm = capMotorPWM(right_motor_pwm);
-      analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
-      digitalWrite(lmotorn, HIGH);
-      analogWrite(rmotor, right_motor_pwm);
-      digitalWrite(rmotorn, HIGH);
-      return;
+bool isAllLow(const int sensor_data[], const int n=8){
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      return false;
     }
   }
-  //stopMoving();
+  return true;
+}
+
+bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1500, const int n=8){
+  if(!isAllLow(sensor_data, n)){
+    return true;
+  }
+  static unsigned long int target_time;
+  static bool response_delay_flag;
+  if(!response_delay_flag){
+    target_time = millis() + response_delay;
+    response_delay_flag = true;
+  }
+  if(millis()>target_time){
+    stopMoving();
+    response_delay_flag = false;
+  }
+  return false;
+}
+
+void writeMotors(const int pid){
+  static const int base_pwm = 40;
+  int left_motor_pwm = base_pwm+pid;
+  int right_motor_pwm = base_pwm-pid;
+  left_motor_pwm = capMotorPWM(left_motor_pwm);
+  right_motor_pwm = capMotorPWM(right_motor_pwm);
+  analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
+  digitalWrite(lmotorn, HIGH);
+  analogWrite(rmotor, right_motor_pwm);
+  digitalWrite(rmotorn, HIGH);
 }
 
  
  void loop() {
     sensorsRead(); // get ir values
-    digitaliseData();
+    digitaliseData();  
+    if(!checkWhiteToStopMoving(dig_ir))return;
     current_pos=getPosition();             //Calculate Position
     /*Serial.print(" Current pos");        //When all sensors detect low The function gives99.99
     Serial.println(current_pos);*/         //At which point it will turn either side in search of the line
