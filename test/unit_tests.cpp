@@ -42,14 +42,29 @@ void testGetDeviation(){
     {0, 0, 0, 1, 1, 1, 0, 0},
     {0, 0, 0, 0, 0, 0, 1, 1}
   };
-  float expected[] = {0, +2.5, -1.5, -0.5, -3};
+  float expected[] = {0, -2.5, +1.5, +0.5, +3};
   for(int i=0; i<5; ++i){
-    float calculated_value = getPosition(sensor_datas[i]);
+    float calculated_value = getDeviation(sensor_datas[i]);
     if(!(calculated_value == expected[i])){
       printArrayConsole(sensor_datas[i], 8);
       cout << calculated_value << "!=" << expected[i] << endl;
     }
   }
+}
+
+bool isEqual(int a, int b){
+  if(a!=b){
+    cout << a << "!=" << b << endl;
+    return false;
+  }
+  return true;
+}
+
+int testCapMotors(){
+  assert(isEqual(capMotorPWM(260), 255));
+  assert(isEqual(capMotorPWM(56), 56));
+  assert(isEqual(capMotorPWM(78), 78));
+  assert(isEqual(capMotorPWM(-17), 0));
 }
 
 

@@ -9,11 +9,6 @@ int rmotor = 10;
 int rmotorn = 11;
 byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
-int bsl = 127; // analogWrite base speed for left motor
-int bsr = 127; // analogWrite base speed for right motor 
-
-int ir[8];
-
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
     sensor_data[i] = analogRead(pins[i]);
@@ -53,39 +48,45 @@ float getPID(float error)
   
 }
 
+void stopMoving(){
+  digitalWrite(lmotor, HIGH);
+  digitalWrite(lmotorn, HIGH);
+  digitalWrite(rmotor, HIGH);
+  digitalWrite(rmotorn, HIGH);
+}
+
 void writeMotors(const int pid, const int sensor_data[]){
+  static const int base_pwm = 127;
   for(int i=0; i<8; ++i)
   {
     if(sensor_data[i]) // Write motors after finding if at least one of the sensors shows HIGH signal.
                       // Otherwise, we are off track and hence stop.
     {
-      int left_motor_pwm = bsl-pid;
-      int right_motor_pwm = bsl+pid;
+      int left_motor_pwm = base_pwm+pid;
+      int right_motor_pwm = base_pwm-pid;
       left_motor_pwm = capMotorPWM(left_motor_pwm);
       right_motor_pwm = capMotorPWM(right_motor_pwm);
       analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
+      digitalWrite(lmotorn, HIGH);
       analogWrite(rmotor, right_motor_pwm);
+      digitalWrite(rmotorn, HIGH);
       return;
     }
   }
+  stopMoving();
 }
 
 
-void startSpinning(int const spin){
-  analogWrite(lmotor,255-spin);
-  analogWrite(rmotor,spin);
-}
-
-void stopMoving(){
-  analogWrite(lmotor, 255);
-  analogWrite(lmotorn, 255);
-  analogWrite(rmotor, 255);
-  analogWrite(rmotorn, 255);
+void startSpinning(bool const clockwise_flag){
+  digitalWrite(lmotor, clockwise_flag);
+  digitalWrite(lmotorn, !clockwise_flag);
+  digitalWrite(rmotor, !clockwise_flag);
+  digitalWrite(rmotorn, clockwise_flag);
 }
 
 
 void calibrate(int thresholds[], byte const pins[], int const n = 8){
-  startSpinning(255);
+  startSpinning(HIGH);
   int sensorData[n];
   int minValues[n], maxValues[n];
   for(int i=0; i<200; ++i){
@@ -107,10 +108,12 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
   stopMoving();
 }
 
+/*
 int findEndOfStreak(int const sensor_data[], int j, int const n = 8){
   bool junk;
   return findEndOfStreak(sensor_data, &junk, j, n);
 }
+*/
 
 void swap(int *const a, int *const b){
   int temp = *a;
@@ -147,24 +150,26 @@ void setup() {
   pinMode(10, OUTPUT);
   pinMode(11, OUTPUT);
   Serial.begin(9600);
-  for(int i=0; i<8; ++i){
-    pinMode(ir[i], INPUT); // Try removing the decalration if it doesn't work
-  }
   // testFilterSensors();
   calibrate(thresholds, pins);
+  printArray(thresholds);
 }
+
+// Task : Find line if out of line
 
 void loop() 
 {
-  int sensor_data[8];
+  static int sensor_data[8];
   sensorsRead(sensor_data, pins);
-  digitaliseData(ir, thresholds);
-  float error=getDeviation(ir);
-  Serial.print("error:");
-  Serial.println(error);  // also debugging
-  Serial.print("pid value:");
+  printArray(sensor_data);
+  digitaliseData(sensor_data, thresholds);
+  printArray(sensor_data);
+  float error=getDeviation(sensor_data);
+  Serial.print(error);
   pid=getPID(error); // pid error value
+  Serial.print(pid);
   writeMotors(pid,sensor_data);
+  Serial.print("\n");
   // int op = digitalread(ir_pin);
 }
 
