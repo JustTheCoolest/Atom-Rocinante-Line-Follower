@@ -1,3 +1,9 @@
+/* TODO:
+ *  -Make robot go faster
+ *  -Fix branching
+ *  
+ */
+  
   int left_motor_pwm;
   int right_motor_pwm;
   float current_pos;  //PID error
@@ -19,8 +25,8 @@
   int ir6 = A5;
   int ir7 = A6;
   int ir8 = A7;
-  int bsl = 40; // analogWrite base speed for left motor
-  int bsr = 40; // analogWrite base speed for right motor 
+//  int bsl = 40; deprecated analogWrite base speed for left motor
+//  int bsr = 40; deprecated analogWrite base speed for right motor 
   int pins[8] = {ir1, ir2, ir3, ir4, ir5, ir6, ir7, ir8};
   int an_ir[8];
   int dig_ir[8];
@@ -111,14 +117,10 @@ void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
 }
 
 void calibrate(int thresholds[], byte const pins[], int const n = 8){
-  analogWrite(lmotor,bsl);
-  digitalWrite(lmotorn,HIGH);
-  digitalWrite(rmotor,LOW);
-  analogWrite(rmotorn,bsl);
-  
+  startSpinning(HIGH);
   int sensorData[n];
   int minValues[n], maxValues[n];
-  for(int i=0; i<50; ++i){
+  for(int i=0; i<200; ++i){
     sensorsRead(sensorData, pins, n);
     for(int j=0; j<n; ++j){
       if(sensorData[j]<minValues[j] || i==0){
@@ -127,17 +129,16 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
       if(sensorData[j]>maxValues[j] || i==0){
         maxValues[j] = sensorData[j];
       }
+      delay(1);
     }
   }
   // is this for stopping when everything is black?
   for(int i=0; i<n; ++i){
     thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
   }
-  digitalWrite(lmotor,HIGH);
-  digitalWrite(lmotorn,HIGH);
-  digitalWrite(rmotor,LOW);
-  digitalWrite(rmotorn,LOW);
-}`                                                                                                                                                                                                                                                                                                                                                                            
+  Serial.print("no stop");
+}
+                                                                                                                                                                                                                                                                                                                                                                            
 
   void setup() {
     // put your setup code here, to run once
@@ -171,7 +172,7 @@ bool isAllLow(const int sensor_data[], const int n=8){
   return true;
 }
 
-bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1500, const int n=8){
+bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1, const int n=8){
   if(!isAllLow(sensor_data, n)){
     return true;
   }
@@ -182,14 +183,14 @@ bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay
     response_delay_flag = true;
   }
   if(millis()>target_time){
-    startSpinning(right_motor_pwm>left_motor_pwm);
+    startSpinning(right_motor_pwm<left_motor_pwm);
     response_delay_flag = false;
   }
   return false;
 }
 
 void writeMotors(const int pid){
-  static const int base_pwm = 40;
+  static const int base_pwm = 5;
   left_motor_pwm = base_pwm+pid;
   right_motor_pwm = base_pwm-pid;
   left_motor_pwm = capMotorPWM(left_motor_pwm);
@@ -200,6 +201,29 @@ void writeMotors(const int pid){
   digitalWrite(rmotorn, HIGH);
 }
 
+void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
+  startSpinning(HIGH);
+  int sensorData[n];
+  int minValues[n], maxValues[n];
+  for(int i=0; i<200; ++i){
+    sensorsRead(sensorData, pins, n);
+    for(int j=0; j<n; ++j){
+      if(sensorData[j]<minValues[j] || i==0){
+        minValues[j] = sensorData[j];
+      }
+      if(sensorData[j]>maxValues[j] || i==0){
+        maxValues[j] = sensorData[j];
+      }
+      delay(1);
+    }
+  }
+  // is this for stopping when everything is black?
+  for(int i=0; i<n; ++i){
+    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
+  }
+ Serial.print("no stop");
+  
+}
  
  void loop() {
     sensorsRead(); // get ir values
@@ -211,31 +235,4 @@ void writeMotors(const int pid){
     float  pid=getPID(current_pos);                   //Retrieve PID value
   //  Serial.print(pid); 
   writeMotors(pid);
-  /*
-   pid=abs(pid);
-   int mpid=int(pid+0.5);                 //Convert pid to integer values:Round it to nearest integer
-   float  er=set_pos-current_pos;
-   
-   int lsp=bsl+mpid;
-   int rsp=bsl-mpid;
-   
-   if(lsp<0) lsp=0;
-   else if(lsp>255) lsp=255;
-   if (rsp<0) rsp=0;
-   else if(rsp >255) rsp=255;
-
-                   
-    if(er>0){
-    analogWrite(lmotor,rsp);          //Check pid values, direction of turning and adjust
-    digitalWrite(lmotorn,HIGH);
-    analogWrite(rmotor,lsp);
-    digitalWrite(rmotorn,HIGH);
-    }
-    else{
-    analogWrite(lmotor,lsp);          
-    digitalWrite(lmotorn,HIGH);
-    analogWrite(rmotor,rsp);
-    digitalWrite(rmotorn,HIGH); 
-    }
-    */
  }  
