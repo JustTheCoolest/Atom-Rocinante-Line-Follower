@@ -1,3 +1,5 @@
+  int left_motor_pwm;
+  int right_motor_pwm;
   float current_pos;  //PID error
   float set_pos=0;    //Sensor 4,5 go high
   float reset,prev_error;
@@ -91,7 +93,15 @@ float getPID(float error)
   prev_time=current_time;
 
   return pid;
+
   
+}
+
+void startSpinning(bool const clockwise_flag){
+  digitalWrite(lmotor, clockwise_flag);
+  digitalWrite(lmotorn, !clockwise_flag);
+  digitalWrite(rmotor, !clockwise_flag);
+  digitalWrite(rmotorn, clockwise_flag);
 }
 
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
@@ -127,7 +137,7 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
   digitalWrite(lmotorn,HIGH);
   digitalWrite(rmotor,LOW);
   digitalWrite(rmotorn,LOW);
-}
+}`                                                                                                                                                                                                                                                                                                                                                                            
 
   void setup() {
     // put your setup code here, to run once
@@ -172,7 +182,7 @@ bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay
     response_delay_flag = true;
   }
   if(millis()>target_time){
-    stopMoving();
+    startSpinning(right_motor_pwm>left_motor_pwm);
     response_delay_flag = false;
   }
   return false;
@@ -180,8 +190,8 @@ bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay
 
 void writeMotors(const int pid){
   static const int base_pwm = 40;
-  int left_motor_pwm = base_pwm+pid;
-  int right_motor_pwm = base_pwm-pid;
+  left_motor_pwm = base_pwm+pid;
+  right_motor_pwm = base_pwm-pid;
   left_motor_pwm = capMotorPWM(left_motor_pwm);
   right_motor_pwm = capMotorPWM(right_motor_pwm);
   analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
