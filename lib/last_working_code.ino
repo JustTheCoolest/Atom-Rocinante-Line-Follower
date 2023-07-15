@@ -1,3 +1,9 @@
+/* TODO:
+ *  -Make robot go faster
+ *  -Fix branching
+ *  
+ */
+  
   int left_motor_pwm;
   int right_motor_pwm;
   float current_pos;  //PID error
@@ -215,7 +221,9 @@ void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
   for(int i=0; i<n; ++i){
     thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
   }
+
   Serial.print("no stop");
+
   
 }
  
@@ -229,31 +237,4 @@ void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
     float  pid=getPID(current_pos);                   //Retrieve PID value
   //  Serial.print(pid); 
   writeMotors(pid);
-  /*
-   pid=abs(pid);
-   int mpid=int(pid+0.5);                 //Convert pid to integer values:Round it to nearest integer
-   float  er=set_pos-current_pos;
-   
-   int lsp=bsl+mpid;
-   int rsp=bsl-mpid;
-   
-   if(lsp<0) lsp=0;
-   else if(lsp>255) lsp=255;  
-   if (rsp<0) rsp=0;
-   else if(rsp >255) rsp=255;
-
-                   
-    if(er>0){
-    analogWrite(lmotor,rsp);          //Check pid values, direction of turning and adjust
-    digitalWrite(lmotorn,HIGH);
-    analogWrite(rmotor,lsp);
-    digitalWrite(rmotorn,HIGH);
-    }
-    else{
-    analogWrite(lmotor,lsp);          
-    digitalWrite(lmotorn,HIGH);
-    analogWrite(rmotor,rsp);
-    digitalWrite(rmotorn,HIGH); 
-    }
-    */
  }  
