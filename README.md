@@ -2,4 +2,4 @@
 
 Work in progress.
 
-Current .ino file can be found in releases, alternatively in the lib folder
+Current .ino file can be found in the lib folder
