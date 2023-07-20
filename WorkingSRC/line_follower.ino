@@ -3,7 +3,8 @@
  *  -Fix branching
  *  
  */
-  
+  constexpr int n = 8;
+
   int left_motor_pwm;
   int right_motor_pwm;
   float current_pos;  //PID error
@@ -172,7 +173,7 @@ bool isAllLow(const int sensor_data[], const int n=8){
   return true;
 }
 
-bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1, const int n=8){
+bool checkHardTurns(int sensor_data[], unsigned int const response_delay = 1, const int n=8){
   if(!isAllLow(sensor_data, n)){
     return true;
   }
@@ -279,12 +280,12 @@ class Line{
  void loop() {
     sensorsRead(); // get ir values
     digitaliseData();  
-    if(!checkWhiteToStopMoving(dig_ir))return;
+    if(!checkHardTurns(dig_ir))return;
     Line line;
     line.findBranches(dig_ir, n);
     struct streak branch = line.selectBranch(dig_ir, n);
-    float error=line.getDeviation(branch, n);
-    current_pos=getPosition();             //Calculate Position
+    float current_pos=line.getDeviation(branch, n);
+    //current_pos=getPosition();             //Calculate Position
     /*Serial.print(" Current pos");        //When all sensors detect low The function gives99.99
     Serial.println(current_pos);*/         //At which point it will turn either side in search of the line
     float  pid=getPID(current_pos);                   //Retrieve PID value
