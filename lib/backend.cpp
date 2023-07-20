@@ -41,7 +41,7 @@ void filterSensors(int sensor_data[], int n = 8){
   }
 }
 
-
+/*
 float getDeviation(int sensor_data[], int n = 8){
   float index_shift = n/2-0.5;  // 3.5
   int number_of_high_sensors = 0; 
@@ -58,6 +58,59 @@ float getDeviation(int sensor_data[], int n = 8){
   float deviation = sum_of_high_sensors/number_of_high_sensors; // error value for pid
   return +deviation; // CONVENTION: ROBOT TURNING RIGHT IS POSITIVE
 }
+*/
+
+struct streak{
+  int filled = false;
+  int start_index;
+  int end_index;
+  int length;
+};
+
+class Line{
+  struct streak streaks[8];
+  public:
+  void findBranches(int sensor_data[], int n){
+    int streak_start = -1;
+    int streak_end = -1;
+    int streaks_index = 0;
+    for(int i=0; i<n; ++i){
+      if(sensor_data[i]){
+        if(streak_start==-1){
+          streak_start = i;
+        }
+      }
+      else{
+        if(streak_start!=-1){
+          streaks[streaks_index].filled = true;
+          streaks[streaks_index].start_index = streak_start;
+          streaks[streaks_index].end_index = i-1;
+          streaks[streaks_index].length = i-streak_start;
+          ++streaks_index;
+          streak_start = -1;
+        }
+      }
+    }
+  }
+  struct streak selectBranch(int sensor_data[], int n){
+    int max_length = 0;
+    int max_length_index = -1;
+    for(int i=0; i<n; ++i){
+      if(streaks[i].length>max_length){
+        max_length = streaks[i].length;
+        max_length_index = i;
+      }
+    }
+    return streaks[max_length_index];
+  }
+  float getDeviation(struct streak branch, const int n = 8){
+    float step_size = 0.5;
+    float index_shift = n/2-step_size;  // 3.5
+    int first_value = branch.start_index-index_shift;
+    int deviation = (first_value+step_size*(branch.length-1))/branch.length;
+    return deviation; // CONVENTION: ROBOT TURNING RIGHT IS POSITIVE
+  }
+};
 
 int capMotorPWM(int const unprocessed_pwm){
   int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
