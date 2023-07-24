@@ -186,6 +186,7 @@ bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay
   }
   if (isAllHigh) {
     stopMoving();
+    return true;
   }
   static unsigned long int target_time;
   static bool response_delay_flag;
