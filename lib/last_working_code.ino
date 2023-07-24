@@ -171,6 +171,14 @@ bool isAllLow(const int sensor_data[], const int n=8){
   }
   return true;
 }
+bool isAllHigh(const int sensor_data[], const int n=8){
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      return false;
+    }
+  }
+  return true;
+}
 
 bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1, const int n=8){
   if(!isAllLow(sensor_data, n)){
