@@ -9,6 +9,8 @@ int rmotor = 10;
 int rmotorn = 11;
 byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
+constexpr n=8;
+
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
     sensor_data[i] = analogRead(pins[i]);
@@ -184,7 +186,10 @@ void loop()
   if(!checkWhiteToStopMoving(sensor_data)){
     return;
   }
-  float error=getDeviation(sensor_data);
+  Line line;
+  line.findBranches(sensor_data, n);
+  struct streak branch = line.selectBranch(sensor_data, n);
+  float error=line.getDeviation(branch, n);
   Serial.print(error);
   pid=getPID(error); // pid error value
   Serial.print(pid);

@@ -3,9 +3,8 @@
  *  -Fix branching
  *  
  */
-  constexpr float kp = 80,ki = 0,kd =0;
-  constexpr int base_pwm = 20;
-  constexpr unsigned int response_delay = 1;
+  float kp = 0 ,ki = 0,kd =0;
+  constexpr int base_pwm = 50;
   
   int left_motor_pwm;
   int right_motor_pwm;
@@ -94,18 +93,10 @@ float getPID(float error)
   unsigned long current_time=millis();
   double del_time=current_time-prev_time;                   //Steady state error
   reset += error*del_time;                                 //Reset-The small errors that get accumulated over time *reset gets added over time , hence global variable
-  float rate_error= (error-prev_error)/del_time;    
-  //float rate_error = error-prev_error;//Rate of change of error
+  float rate_error= (error-prev_error)/del_time;             //Rate of change of error
   float pid=kp*(error) + ki*(reset) + kd*(rate_error);     //Calculate PID value
 
-  if(pid!=0){
-  //Serial.print(error);
-  //Serial.print(" ");
-  //Serial.print(rate_error);
-  //Serial.print(" ");
-  //Serial.print(pid);
-  //Serial.print("\n");
-  }
+
   prev_error=error;
   prev_time=current_time;
 
@@ -182,21 +173,9 @@ bool isAllLow(const int sensor_data[], const int n=8){
   }
   return true;
 }
-bool isAllHigh(const int sensor_data[], const int n=8){
-  for(int i=0; i<n; ++i){
-    if(!sensor_data[i]){
-      return false;
-    }
-  }
-  return true;
-}
 
-bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay, const int n=8){
+bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1, const int n=8){
   if(!isAllLow(sensor_data, n)){
-    return true;
-  }
-  if (isAllHigh) {
-    stopMoving();
     return true;
   }
   static unsigned long int target_time;
@@ -248,16 +227,14 @@ void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
 }
 
 void testingIncrementConstant(unsigned const int increment_delay){
-  //kd = int(millis() / increment_delay);
+  kp = int(millis() / increment_delay);
 }
  
  void loop() {
-    //testingIncrementConstant(100);
-    //stopMoving();
-    //delay(100);
+    testingIncrementConstant(100);
     sensorsRead(); // get ir values
     digitaliseData();  
-    if(!checkWhiteToStopMoving(dig_ir, response_delay))return;
+    if(!checkWhiteToStopMoving(dig_ir))return;
     current_pos=getPosition();             //Calculate Position
     /*//Serisl.print(" Current pos");        //When all sensors detect low The function gives99.99
     ////Serial.println(current_pos);*/         //At which point it will turn either side in search of the line
