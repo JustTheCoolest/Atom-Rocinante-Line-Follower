@@ -6,6 +6,7 @@
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 20;
   constexpr unsigned int response_delay = 1;
+  constexpr int n = 8;
   
   int left_motor_pwm;
   int right_motor_pwm;
@@ -85,7 +86,7 @@ float getPosition(int sensor_data[]=dig_ir, int n = 8){
   float deviation = sum_of_high_sensors/number_of_high_sensors; // error value for pid
   return +deviation; // CONVENTION: ROBOT TURNING RIGHT IS POSITIVE
 }
-    
+
 float getPID(float error)
 {
   static float reset,prev_error;

@@ -9,7 +9,7 @@ int rmotor = 10;
 int rmotorn = 11;
 byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
-constexpr n=8;
+constexpr int n=8;
 
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
