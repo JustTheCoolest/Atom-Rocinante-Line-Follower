@@ -112,6 +112,16 @@ class Line{
   }
 };
 
+int number_of_high_sensors(int sensor_data[], int n){
+  int number_of_high_sensors = 0;
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      ++number_of_high_sensors;
+    }
+  }
+  return number_of_high_sensors;
+}
+
 int capMotorPWM(int const unprocessed_pwm){
   int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
   return cappedPWM;

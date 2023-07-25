@@ -174,6 +174,10 @@ void setup() {
   printArray(thresholds);
 }
 
+void testingIncrementConstant(unsigned const int increment_delay){
+  //kd = int(millis() / increment_delay);
+}
+
 // Task : Find line if out of line
 
 void loop() 
