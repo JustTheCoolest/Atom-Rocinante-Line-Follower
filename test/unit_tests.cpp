@@ -82,6 +82,11 @@ int testCapMotors(){
   assert(isEqual(capMotorPWM(-17), 0));
 }
 
+void testShiftMotorPWM(){
+  int first_motor_pwm = 260, second_motor_pwm = -255;
+  capMotorPWM(left_motor_pwm, right_motor_pwm);
+  assert()
+}
 
 int main(){
   testGetDeviation();

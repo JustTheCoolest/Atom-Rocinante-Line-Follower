@@ -112,7 +112,7 @@ class Line{
   }
 };
 
-int number_of_high_sensors(int sensor_data[], int n){
+int numberOfHighSensors(int sensor_data[], int n){
   int number_of_high_sensors = 0;
   for(int i=0; i<n; ++i){
     if(sensor_data[i]){
@@ -122,7 +122,25 @@ int number_of_high_sensors(int sensor_data[], int n){
   return number_of_high_sensors;
 }
 
+float correctPidValueForOrientation(float pid, int number_of_high_sensors){
+  int constant_of_sync = 2;
+  return pid*number_of_high_sensors/constant_of_sync;
+}
+
 int capMotorPWM(int const unprocessed_pwm){
   int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
   return cappedPWM;
+}
+
+void shiftMotorPWM(int *first_motor_pwm, int *second_motor_pwm){
+  const int max_value = 255;
+  int *higher_motor_pwm, *lower_motor_pwm;
+  higher_motor_pwm = *first_motor_pwm > *second_motor_pwm ? first_motor_pwm : second_motor_pwm;
+  if(*higher_motor_pwm > max_value){
+    *lower_motor_pwm -= *higher_motor_pwm - max_value;
+    *higher_motor_pwm = max_value;
+  }
+  if(*lower_motor_pwm < -max_value){
+    *lower_motor_pwm = -max_value;
+  }
 }
