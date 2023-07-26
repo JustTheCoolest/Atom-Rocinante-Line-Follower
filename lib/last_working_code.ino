@@ -1,8 +1,5 @@
-/* TODO:
- *  -Make robot go faster
- *  -Fix branching
- *  
- */
+/* TODO: Base speed, new algorithm, response delay, wheels, continuous calibration */
+
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 20;
   constexpr unsigned int response_delay = 200;
