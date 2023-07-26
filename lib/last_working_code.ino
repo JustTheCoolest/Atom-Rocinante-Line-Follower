@@ -5,8 +5,10 @@
  */
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 20;
-  constexpr unsigned int response_delay = 1;
+  constexpr unsigned int response_delay = 200;
   constexpr int n = 8;
+  //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
+  int thresholds[8];
   
   int left_motor_pwm;
   int right_motor_pwm;
@@ -42,8 +44,6 @@
     sensor_data[i] = analogRead(pins[i]);
   }
 }
-
-int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
 
 void digitaliseData(int sensor_data[]=an_ir, int const thresholds[]=thresholds, int const  n = 8)
 {
@@ -114,7 +114,13 @@ float getPID(float error)
 
   
 }
-
+void printArray(int array[], int n=8){
+  for(int i=0; i<n; ++i){
+    Serial.print(array[i]);
+    Serial.print(" ");
+  }
+  Serial.print("\n");
+}
 void startSpinning(bool const clockwise_flag){
   digitalWrite(lmotor, clockwise_flag);
   digitalWrite(lmotorn, !clockwise_flag);
@@ -127,41 +133,7 @@ void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
     sensor_data[i] = analogRead(pins[i]);
   }
 }
-
-void calibrate(int thresholds[], byte const pins[], int const n = 8){
-  startSpinning(HIGH);
-  int sensorData[n];
-  int minValues[n], maxValues[n];
-  for(int i=0; i<200; ++i){
-    sensorsRead(sensorData, pins, n);
-    for(int j=0; j<n; ++j){
-      if(sensorData[j]<minValues[j] || i==0){
-        minValues[j] = sensorData[j];
-      }
-      if(sensorData[j]>maxValues[j] || i==0){
-        maxValues[j] = sensorData[j];
-      }
-      delay(1);
-    }
-  }
-  // is this for stopping when everything is black?
-  for(int i=0; i<n; ++i){
-    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
-  }
-  //Serial.print("no stop");
-}
                                                                                                                                                                                                                                                                                                                                                                             
-
-  void setup() {
-    // put your setup code here, to run once
-    
-    pinMode(3, OUTPUT);
-    pinMode(9, OUTPUT);
-    pinMode(10, OUTPUT);
-    pinMode(11, OUTPUT);
-    
-    //Serial.begin(9600);
-  }
 
 int capMotorPWM(int const unprocessed_pwm){
   int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
@@ -212,11 +184,15 @@ void writeMotors(const int pid){
   digitalWrite(rmotorn, HIGH);
 }
 
-void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
-  startSpinning(HIGH);
+void newCalibrate(int thresholds[], int const pins[], int const n = 8){
+  analogWrite(lmotor, 127);
+  digitalWrite(lmotorn, HIGH);
+  analogWrite(rmotorn, 127);
+  digitalWrite(rmotor, HIGH);
+  //startSpinning(HIGH);
   int sensorData[n];
   int minValues[n], maxValues[n];
-  for(int i=0; i<200; ++i){
+  for(int i=0; i<2000; ++i){
     sensorsRead(sensorData, pins, n);
     for(int j=0; j<n; ++j){
       if(sensorData[j]<minValues[j] || i==0){
@@ -225,12 +201,11 @@ void newCalibrate(int thresholds[], byte const pins[], int const n = 8){
       if(sensorData[j]>maxValues[j] || i==0){
         maxValues[j] = sensorData[j];
       }
-      delay(1);
     }
   }
   // is this for stopping when everything is black?
   for(int i=0; i<n; ++i){
-    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
+    thresholds[i] = 0.4*maxValues[i] + 0.6*minValues[i] + 0.5;
   }
  //Serial.print("no stop");
   
@@ -240,12 +215,29 @@ void testingIncrementConstant(unsigned const int increment_delay){
   //kd = int(millis() / increment_delay);
 }
  
+void setup() {
+    // put your setup code here, to run once
+    
+    pinMode(3, OUTPUT);
+    pinMode(9, OUTPUT);
+    pinMode(10, OUTPUT);
+    pinMode(11, OUTPUT);
+    newCalibrate(thresholds, pins, n);
+    
+    //Serial.begin(9600);
+  }
+
  void loop() {
     //testingIncrementConstant(100);
     //stopMoving();
     //delay(100);
+    
+  //printArray(thresholds);
+  
     sensorsRead(); // get ir values
-    digitaliseData();  
+    //printArray(an_ir, n);
+    digitaliseData();
+    //printArray(dig_ir, n);
     if(!checkWhiteToStopMoving(dig_ir, response_delay))return;
     current_pos=getPosition();             //Calculate Position
     /*//Serisl.print(" Current pos");        //When all sensors detect low The function gives99.99
