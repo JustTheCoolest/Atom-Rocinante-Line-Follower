@@ -41,7 +41,6 @@ void filterSensors(int sensor_data[], int n = 8){
   }
 }
 
-/*
 float getDeviation(int sensor_data[], int n = 8){
   float index_shift = n/2-0.5;  // 3.5
   int number_of_high_sensors = 0; 
@@ -58,7 +57,6 @@ float getDeviation(int sensor_data[], int n = 8){
   float deviation = sum_of_high_sensors/number_of_high_sensors; // error value for pid
   return +deviation; // CONVENTION: ROBOT TURNING RIGHT IS POSITIVE
 }
-*/
 
 struct streak{
   int filled = false;
@@ -68,11 +66,10 @@ struct streak{
 };
 
 class Line{
-  struct streak streaks[8];
   public:
+  struct streak streaks[8];
   void findBranches(int sensor_data[], int n){
     int streak_start = -1;
-    int streak_end = -1;
     int streaks_index = 0;
     for(int i=0; i<n; ++i){
       if(sensor_data[i]){
@@ -96,6 +93,9 @@ class Line{
     int max_length = 0;
     int max_length_index = -1;
     for(int i=0; i<n; ++i){
+      if(!streaks[i].filled){
+        break;
+      }
       if(streaks[i].length>max_length){
         max_length = streaks[i].length;
         max_length_index = i;
@@ -112,7 +112,35 @@ class Line{
   }
 };
 
+int numberOfHighSensors(int sensor_data[], int n){
+  int number_of_high_sensors = 0;
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      ++number_of_high_sensors;
+    }
+  }
+  return number_of_high_sensors;
+}
+
+float correctPidValueForOrientation(float pid, int number_of_high_sensors){
+  int constant_of_sync = 2;
+  return pid*number_of_high_sensors/constant_of_sync;
+}
+
 int capMotorPWM(int const unprocessed_pwm){
   int cappedPWM = unprocessed_pwm > 255 ? 255 : unprocessed_pwm < 0 ? 0 : unprocessed_pwm;
   return cappedPWM;
+}
+
+void shiftMotorPWM(int *first_motor_pwm, int *second_motor_pwm){
+  const int max_value = 255;
+  int *higher_motor_pwm, *lower_motor_pwm;
+  higher_motor_pwm = *first_motor_pwm > *second_motor_pwm ? first_motor_pwm : second_motor_pwm;
+  if(*higher_motor_pwm > max_value){
+    *lower_motor_pwm -= *higher_motor_pwm - max_value;
+    *higher_motor_pwm = max_value;
+  }
+  if(*lower_motor_pwm < -max_value){
+    *lower_motor_pwm = -max_value;
+  }
 }

@@ -9,7 +9,7 @@ int rmotor = 10;
 int rmotorn = 11;
 byte pins[8] = {A0, A1, A2, A3, A4, A5, A6, A7};
 
-constexpr n=8;
+constexpr int n=8;
 
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
@@ -66,16 +66,27 @@ bool isAllLow(const int sensor_data[], const int n=8){
   return true;
 }
 
+void writeMotorWithPins(int motor_pwm, byte const analog_pin_for_forward, byte const digital_pin_for_forward){
+  byte analog_pin, digital_pin;
+  if(motor_pwm<0){
+    analog_pin = digital_pin_for_forward;
+    digital_pin = analog_pin_for_forward;
+    motor_pwm *= -1;
+  }
+  else{
+    analog_pin = analog_pin_for_forward;
+    digital_pin = digital_pin_for_forward;
+  }
+  analogWrite(analog_pin_for_forward, motor_pwm);
+  digitalWrite(digital_pin_for_forward, HIGH);
+}
+
 void writeMotors(const int pid){
   static const int base_pwm = 40;
   int left_motor_pwm = base_pwm+pid;
   int right_motor_pwm = base_pwm-pid;
-  left_motor_pwm = capMotorPWM(left_motor_pwm);
-  right_motor_pwm = capMotorPWM(right_motor_pwm);
-  analogWrite(lmotor,left_motor_pwm);          //Check pid values, direction of turning and adjust
-  digitalWrite(lmotorn, HIGH);
-  analogWrite(rmotor, right_motor_pwm);
-  digitalWrite(rmotorn, HIGH);
+  writeMotorWithPins(left_motor_pwm, lmotor, lmotorn);
+  writeMotorWithPins(right_motor_pwm, rmotor, rmotorn);
 }
 
 bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay = 1500, const int n=8){
@@ -174,6 +185,10 @@ void setup() {
   printArray(thresholds);
 }
 
+void testingIncrementConstant(unsigned const int increment_delay){
+  //kd = int(millis() / increment_delay);
+}
+
 // Task : Find line if out of line
 
 void loop() 
@@ -192,6 +207,8 @@ void loop()
   float error=line.getDeviation(branch, n);
   Serial.print(error);
   pid=getPID(error); // pid error value
+  int number_of_high_sensors = numberOfHighSensors(sensor_data, n);
+  pid = correctPidValueForOrientation(pid, number_of_high_sensors);
   Serial.print(pid);
   writeMotors(pid);
   Serial.print("\n");
