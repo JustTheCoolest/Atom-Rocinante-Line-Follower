@@ -2,8 +2,8 @@
 
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 0;
-  constexpr unsigned int response_delay = 100;
-  constexpr float calibration_ratio = 0.25;
+  constexpr unsigned int response_delay = 0;
+  constexpr float calibration_ratio = 0.05;
 
   constexpr int n = 8;
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
