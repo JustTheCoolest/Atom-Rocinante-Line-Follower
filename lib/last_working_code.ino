@@ -1,8 +1,10 @@
 /* TODO: Base speed, new algorithm, response delay, wheels, continuous calibration */
 
   constexpr float kp = 80,ki = 0,kd =0;
-  constexpr int base_pwm = 20;
-  constexpr unsigned int response_delay = 200;
+  constexpr int base_pwm = 0;
+  constexpr unsigned int response_delay = 100;
+  constexpr float calibration_ratio = 0.25;
+
   constexpr int n = 8;
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
   int thresholds[8];
@@ -202,7 +204,7 @@ void newCalibrate(int thresholds[], int const pins[], int const n = 8){
   }
   // is this for stopping when everything is black?
   for(int i=0; i<n; ++i){
-    thresholds[i] = 0.4*maxValues[i] + 0.6*minValues[i] + 0.5;
+    thresholds[i] = minValues[i] + calibration_ratio * (maxValues[i] - minValues[i]);
   }
  //Serial.print("no stop");
   

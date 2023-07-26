@@ -1,0 +1,1 @@
+constexpr float calibration_ratio = 0.4;
