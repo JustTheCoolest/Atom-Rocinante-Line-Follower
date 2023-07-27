@@ -1,6 +1,7 @@
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\Arduino.h" // BEFORE EXECUTING ON ARDUINO IDE, REMOVE THIS LINE. IT WILL THROW ERRORS.
 //#include <assert.h>
 #include "../lib/backend.cpp"
+#include "constants.cpp"
 
 // Pin list
 int lmotor = 3;
@@ -116,10 +117,14 @@ void startSpinning(bool const clockwise_flag){
 
 
 void calibrate(int thresholds[], byte const pins[], int const n = 8){
-  startSpinning(HIGH);
+  analogWrite(lmotor, 127);
+  digitalWrite(lmotorn, HIGH);
+  analogWrite(rmotorn, 127);
+  digitalWrite(rmotor, HIGH);
+  //startSpinning(HIGH);
   int sensorData[n];
   int minValues[n], maxValues[n];
-  for(int i=0; i<200; ++i){
+  for(int i=0; i<2000; ++i){
     sensorsRead(sensorData, pins, n);
     for(int j=0; j<n; ++j){
       if(sensorData[j]<minValues[j] || i==0){
@@ -128,14 +133,14 @@ void calibrate(int thresholds[], byte const pins[], int const n = 8){
       if(sensorData[j]>maxValues[j] || i==0){
         maxValues[j] = sensorData[j];
       }
-      delay(1);
     }
   }
   // is this for stopping when everything is black?
   for(int i=0; i<n; ++i){
-    thresholds[i] = 0.75*maxValues[i] - 0.25*minValues[i] + 0.5;
+    thresholds[i] = minValues[i] + calibration_ratio * (maxValues[i] - minValues[i]);
   }
-  stopMoving();
+ //Serial.print("no stop");
+  
 }
 
 /*
