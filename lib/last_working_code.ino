@@ -3,7 +3,7 @@
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 0;
   constexpr unsigned int response_delay = 0;
-   float calibration_ratio = 0.2;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
+   float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
 
   constexpr int n = 8;
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
@@ -223,8 +223,10 @@ void setup() {
     pinMode(10, OUTPUT);
     pinMode(11, OUTPUT);
     pinMode(2,INPUT);
-    int mode=digitalRead(swit);
-    if(swit) calibration_ratio=0.05;
+    pinMode(swit,INPUT_PULLUP);
+    
+    calibration_ratio = digitalRead(swit) ? 0.2 : 0.05;
+
     newCalibrate(thresholds, pins, n);
     
     //Serial.begin(9600);
