@@ -3,7 +3,7 @@
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 0;
   constexpr unsigned int response_delay = 0;
-  constexpr float calibration_ratio = 0.05;
+   float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
 
   constexpr int n = 8;
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
@@ -30,6 +30,7 @@
   int ir6 = A5;
   int ir7 = A6;
   int ir8 = A7;
+  int swit=2;
 //  int bsl = 40; deprecated analogWrite base speed for left motor
 //  int bsr = 40; deprecated analogWrite base speed for right motor 
   int pins[8] = {ir1, ir2, ir3, ir4, ir5, ir6, ir7, ir8};
@@ -221,6 +222,11 @@ void setup() {
     pinMode(9, OUTPUT);
     pinMode(10, OUTPUT);
     pinMode(11, OUTPUT);
+    pinMode(2,INPUT);
+    pinMode(swit,INPUT_PULLUP);
+    
+    calibration_ratio = digitalRead(swit) ? 0.2 : 0.05;
+
     newCalibrate(thresholds, pins, n);
     
     //Serial.begin(9600);
