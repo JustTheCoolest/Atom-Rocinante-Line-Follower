@@ -232,22 +232,39 @@ void setup() {
     //Serial.begin(9600);
   }
 
- void loop() {
-    //testingIncrementConstant(100);
-    //stopMoving();
-    //delay(100);
-    
-  //printArray(thresholds);
-  
-    sensorsRead(); // get ir values
-    //printArray(an_ir, n);
-    digitaliseData();
-    //printArray(dig_ir, n);
-    if(!checkWhiteToStopMoving(dig_ir, response_delay))return;
-    current_pos=getPosition();             //Calculate Position
-    /*//Serisl.print(" Current pos");        //When all sensors detect low The function gives99.99
-    ////Serial.println(current_pos);*/         //At which point it will turn either side in search of the line
-    float  pid=getPID(current_pos);                   //Retrieve PID value
-  //  //Serial.print(pid); 
-  writeMotors(pid);
- }  
+/*
+Direction heading;
+bool isRetrace;
+
+Turn checkJunction(){
+  static bool at_junction;
+}
+
+void loop(){
+  readSensors();
+  digitaliseData();
+  Junction junction = getJunction(dig_ir, n);
+  if(junction == nullptr){
+    cuurent_pos = getPosition();
+    float pid = getPID(current_pos);
+    writeMotors(pid);
+    return;
+  }
+  if(junction is end){
+    heading = end;
+    stopMoving();
+    return;
+  }
+  Turn direction;
+  if(isRetrace){
+    assert path.top == junction;
+    direction = path.next(&heading);
+    return;
+  }
+  direction = path.push(junction, &heading);
+  if(direction != front){
+    makeTurn(direction);
+    return;
+  }
+}
+*/
