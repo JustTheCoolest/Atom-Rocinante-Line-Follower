@@ -244,27 +244,30 @@ void loop(){
   readSensors();
   digitaliseData();
   Junction junction = getJunction(dig_ir, n);
-  if(junction == nullptr){
-    cuurent_pos = getPosition();
-    float pid = getPID(current_pos);
-    writeMotors(pid);
-    return;
+  if(junction != nullptr){
+    if(junction is end){
+      if(heading == end){
+        return;
+      }
+      stopMoving();
+      save(path);
+      heading = end;
+      return;
+    }
+    Turn direction;
+    if(isRetrace){
+      assert path.top == junction;
+      direction = path.next(&heading);
+      return;
+    }
+    direction = path.push(junction, &heading);
+    if(direction != front){
+      makeTurn(direction);
+      return;
+    }
   }
-  if(junction is end){
-    heading = end;
-    stopMoving();
-    return;
-  }
-  Turn direction;
-  if(isRetrace){
-    assert path.top == junction;
-    direction = path.next(&heading);
-    return;
-  }
-  direction = path.push(junction, &heading);
-  if(direction != front){
-    makeTurn(direction);
-    return;
-  }
+  cuurent_pos = getPosition();
+  float pid = getPID(current_pos);
+  writeMotors(pid);
 }
 */
