@@ -236,6 +236,9 @@ void setup() {
 Direction heading;
 bool isRetrace;
 
+junction : <bool Left, bool Front, bool Right, Direction heading_at_junction, int iterations = 0>
+path: stack(junction)
+
 Turn checkJunction(){
   static bool at_junction;
 }
