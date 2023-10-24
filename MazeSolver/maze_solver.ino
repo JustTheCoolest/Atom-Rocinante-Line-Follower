@@ -273,9 +273,9 @@ bool isEndAlike(const int sensor_data[], const int n=8){
   return isAllSame(black_line, sensor_data, n);
 }
 
-bool checkEndToAction(int sensor_data[], unsigned int const response_delay, const int n){
+bool checkConditionToAction(bool (condition)(), void (action)()){
   static bool response_delay_flag;
-  if(!isEndAlike(sensor_data, n)){
+  if(!condition()){
     response_delay_flag = false;
     return false;
   }
@@ -285,7 +285,7 @@ bool checkEndToAction(int sensor_data[], unsigned int const response_delay, cons
     response_delay_flag = true;
   }
   if(millis()>target_time){
-    stopMoving();
+    action();
   }
   return true;
 }
@@ -321,7 +321,11 @@ Junction getJunction(bool const sensor_data[], int const n){
 void wall_hugger_loop(){
   sensorsRead();
   digitaliseData(black_line);
-  if(checkEndToAction(dig_ir, response_delay, n)){
+  bool in_end = checkConditionToAction(
+    [](){return isEndAlike(dig_ir, n);},
+    [](){stopMoving();}
+  );
+  if(in_end){
     return;
   }
   Junction junction = getJunction(dig_ir, n);
