@@ -280,9 +280,33 @@ void pid(){
   writeMotors(pid);
 }
 
+isAtEnd(){
+  if(isAllLow(sensor_data, n)){
+    return all_white;
+  }
+  if(isAllHigh(sensor_data, n)){
+    return all_black;
+  }
+}
+
+Junction getJunction(bool const sensor_data[], int const n){
+  static Junction previous_junction = nullptr;
+  Junction junction = checkJunction(sensor_data, n);
+  if(junction=={0, 1, 0, x, x}){
+    if(previous_junction != nullptr){
+      previous_junction = nullptr;
+      return junction;
+    }
+    return nullptr;
+  }
+  previous_junction = junction;
+  return;
+}
+*/
+
 // Task: Stop at end
 void wall_hugger_loop(){
-  readSensors();
+  sensorsRead();
   digitaliseData();
   Junction junction = getJunction(dig_ir, n);
   Turn direction = junction ? front : junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
@@ -292,4 +316,3 @@ void wall_hugger_loop(){
   }
   pid();
 }
-*/
