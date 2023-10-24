@@ -299,8 +299,9 @@ Junction getJunction(bool const sensor_data[], int const n){
     }
     return nullptr;
   }
+  assert previous_junction == junction;
   previous_junction = junction;
-  return;
+  return nullptr;
 }
 */
 
