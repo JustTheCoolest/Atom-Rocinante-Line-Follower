@@ -243,7 +243,7 @@ Turn checkJunction(){
   static bool at_junction;
 }
 
-void loop(){
+void stack_loop(){
   readSensors();
   digitaliseData();
   Junction junction = getJunction(dig_ir, n);
@@ -269,8 +269,27 @@ void loop(){
       return;
     }
   }
-  cuurent_pos = getPosition();
+  current_pos = getPosition();
   float pid = getPID(current_pos);
   writeMotors(pid);
+}
+
+void pid(){
+  current_pos = getPosition();
+  float pid = getPID(current_pos);
+  writeMotors(pid);
+}
+
+// Task: Stop at end
+void wall_hugger_loop(){
+  readSensors();
+  digitaliseData();
+  Junction junction = getJunction(dig_ir, n);
+  Turn direction = junction ? front : junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
+  if(direction != front){
+    makeTurn(direction);
+    return;
+  }
+  pid();
 }
 */
