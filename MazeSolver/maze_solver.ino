@@ -3,9 +3,11 @@
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 0;
   constexpr unsigned int response_delay = 0;
-   float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
+  constexpr float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
 
   constexpr int n = 8;
+  constexpr bool black_line = false;
+
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
   int thresholds[8];
   
@@ -45,10 +47,11 @@
   }
 }
 
-void digitaliseData(int sensor_data[]=an_ir, int const thresholds[]=thresholds, int const  n = 8)
+void digitaliseData(bool mode, int sensor_data[]=an_ir, int const thresholds[]=thresholds, int const  n = 8)
 {
+  int sign = mode ? +1 : -1;
   for(int i=0; i<n; ++i){
-    dig_ir[i] = sensor_data[i] > thresholds[i];
+    dig_ir[i] = sign * sensor_data[i] > sign * thresholds[i];.
   }
 }
 
@@ -145,32 +148,6 @@ void stopMoving(){
   digitalWrite(lmotorn, HIGH);
   digitalWrite(rmotor, HIGH);
   digitalWrite(rmotorn, HIGH);
-}
-
-bool isAllLow(const int sensor_data[], const int n=8){
-  for(int i=0; i<n; ++i){
-    if(sensor_data[i]){
-      return false;
-    }
-  }
-  return true;
-}
-
-bool checkWhiteToStopMoving(int sensor_data[], unsigned int const response_delay, const int n=8){
-  if(!isAllLow(sensor_data, n)){
-    return true;
-  }
-  static unsigned long int target_time;
-  static bool response_delay_flag;
-  if(!response_delay_flag){
-    target_time = millis() + response_delay;
-    response_delay_flag = true;
-  }
-  if(millis()>target_time){
-    startSpinning(right_motor_pwm<left_motor_pwm);
-    response_delay_flag = false;
-  }
-  return false;
 }
 
 void writeMotors(const int pid){
@@ -274,11 +251,46 @@ void stack_loop(){
   writeMotors(pid);
 }
 
+*/
+
 void pid(){
   current_pos = getPosition();
   float pid = getPID(current_pos);
   writeMotors(pid);
 }
+
+bool isAllSame(const bool check_high, const int sensor_data[], const int n){
+  int sign = check_high ? +1 : -1;
+  for(int i=0; i<n; ++i){
+    if(sign*sensor_data[i]){
+      return false;
+    }
+  }
+  return true;
+}
+
+bool isEndAlike(const int sensor_data[], const int n=8){
+  return isAllSame(black_line, sensor_data, n);
+}
+
+bool checkEndToAction(int sensor_data[], unsigned int const response_delay, const int n){
+  static bool response_delay_flag;
+  if(!isEndAlike(sensor_data, n)){
+    response_delay_flag = false;
+    return false;
+  }
+  static unsigned long int target_time;
+  if(!response_delay_flag){
+    target_time = millis() + response_delay;
+    response_delay_flag = true;
+  }
+  if(millis()>target_time){
+    stopMoving();
+  }
+  return true;
+}
+
+/*
 
 isAtEnd(){
   if(isAllLow(sensor_data, n)){
@@ -308,7 +320,10 @@ Junction getJunction(bool const sensor_data[], int const n){
 // Task: Stop at end
 void wall_hugger_loop(){
   sensorsRead();
-  digitaliseData();
+  digitaliseData(black_line);
+  if(checkEndToAction(dig_ir, response_delay, n)){
+    return;
+  }
   Junction junction = getJunction(dig_ir, n);
   Turn direction = junction ? front : junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
   if(direction != front){
