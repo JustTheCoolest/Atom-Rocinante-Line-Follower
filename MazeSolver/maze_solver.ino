@@ -292,13 +292,23 @@ bool checkConditionToAction(bool (condition)(), void (action)()){
 
 /*
 
-isAtEnd(){
-  if(isAllLow(sensor_data, n)){
-    return all_white;
-  }
-  if(isAllHigh(sensor_data, n)){
-    return all_black;
-  }
+constexpr int line_width = 2;
+
+typedef Direction = int;
+typedef Junction = int[5];
+
+Junction checkJunction(bool const sensor_data[], int const n){
+  int result = countStreaks(sensor_data, n);
+  result format : [left_streak, highest_streak, right_streak];
+  left_streak : Number of sensors consecutively  on from the left
+  (If it's too complicated to get the streaks in one function call, we can do it in three)
+  Junction junction = new Junction;
+  junction[0] = result[0] > line_width;
+  junction[1] = result[1] >= 0;
+  junction[2] = result[2] > line_width;
+  junction[3] = heading;
+  junction[4] = -1;
+  return junction
 }
 
 Junction getJunction(bool const sensor_data[], int const n){
