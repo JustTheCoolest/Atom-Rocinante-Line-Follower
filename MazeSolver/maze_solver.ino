@@ -1,4 +1,4 @@
-/* TODO: Base speed, new algorithm, response delay, wheels, continuous calibration */
+/* TODO: Base speed, response delay, wheels, continuous calibration */
 
   constexpr float kp = 80,ki = 0,kd =0;
   constexpr int base_pwm = 0;
@@ -7,6 +7,7 @@
 
   constexpr int n = 8;
   constexpr bool black_line = false;
+  constexpr int sensor_distances[] = {-4, -3, -2, -1, +1, +2, +3, +4};
 
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
   int thresholds[8];
@@ -73,14 +74,13 @@ void digitaliseData(bool mode, int sensor_data[]=an_ir, int const thresholds[]=t
 signed  int value_assign[8]={-4,-3,-2,-1,1,2,3,4};
 
   //Find position of line
-float getPosition(int sensor_data[]=dig_ir, int n = 8){
-  float index_shift = n/2-0.5;  // 3.5
+float getPosition(const int sensor_data[]=dig_ir, const int n = 8, const int sensor_distances[] = sensor_distances){
   int number_of_high_sensors = 0; 
   float sum_of_high_sensors = 0;
   for(int i=0; i<n; i++){
     if(sensor_data[i]){
       number_of_high_sensors += 1; // number of on sensors
-      sum_of_high_sensors += i-(index_shift); // adding on sensors based on their position on the ir board -- used to calculate deviation
+      sum_of_high_sensors += sensor_distances[i];
     }
   }
   if(!number_of_high_sensors){
