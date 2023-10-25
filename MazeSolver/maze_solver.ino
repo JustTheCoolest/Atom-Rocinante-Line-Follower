@@ -327,23 +327,27 @@ int* checkJunction(const int sensor_data[], int const n){
     result[0] > line_width,
     result[1] >= 0,
     result[2] > line_width,
-    heading,
-    -1
+    // add these while pushing to stack
+    // heading,
+    // -1
   };
   return junction;
 }
 
-Junction getJunction(bool const sensor_data[], int const n){
-  static Junction previous_junction = nullptr;
-  Junction junction = checkJunction(sensor_data, n);
-  if(junction=={0, 1, 0, x, x}){
+int* getJunction(int const sensor_data[], int const n){
+  // junction returned will exist only for one iteration. save it somewhere else (no need for wall hugger)
+  static int *previous_junction = nullptr;
+  int *junction = checkJunction(sensor_data, n);
+  if(junction[1] && !junction[0] && !junction[2]){
     if(previous_junction != nullptr){
+      delete [] previous_junction;
       previous_junction = nullptr;
       return junction;
     }
     return nullptr;
   }
-  assert previous_junction == junction;
+  // assert previous_junction == junction || previous_junction == nullptr;
+  delete [] previous_junction;
   previous_junction = junction;
   return nullptr;
 }
