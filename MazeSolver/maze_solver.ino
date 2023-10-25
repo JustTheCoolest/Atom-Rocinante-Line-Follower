@@ -7,6 +7,7 @@
 
   constexpr int n = 8;
   constexpr bool black_line = false;
+  constexpr int line_width = 2;
 
   //int thresholds[8] = {150, 150, 150, 150, 150, 150, 150, 150};
   int thresholds[8];
@@ -17,8 +18,10 @@
   float set_pos=0;    //Sensor 4,5 go high
   float reset,prev_error;
   unsigned long int prev_time;
-
   
+  constexpr int west = 0, north = 1, east = 2, south = 3;
+  int heading = north;
+
   // Pin list
   int lmotor = 3;
   int lmotorn = 9;
@@ -290,36 +293,54 @@ bool checkConditionToAction(bool (condition)(), void (action)()){
   return true;
 }
 
-/*
-
-constexpr int line_width = 2;
-
-typedef Direction = int;
-typedef Junction = int[5];
-
-int countStreaks(unsigned int mode, bool const sensor_data[], int const n){
+int countEndStreak(unsigned int mode, int const sensor_data[], int const n){
+  int start_point, end_point, increment;
   if(mode==0){ // left
-    for(int i=0; i<n; ++i){
-      if(!sensor_data[i]){
-        return i;
-      }
-    }
-    return n;
+    start_point = 0;
+    end_point = n;
+    increment = 1;
   }
+  else if(mode=1){ // right
+    start_point = n-1;
+    end_point = -1;
+    increment = -1;
+  }
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      return i;
+    }
+  }
+  return n;
 }
 
-Junction checkJunction(bool const sensor_data[], int const n){
-  int result = countStreaks(sensor_data, n);
-  result format : [left_streak, highest_streak, right_streak];
-  left_streak : Number of sensors consecutively  on from the left
-  (If it's too complicated to get the streaks in one function call, we can do it in three)
-  Junction junction = new Junction;
-  junction[0] = result[0] > line_width;
-  junction[1] = result[1] >= 0;
-  junction[2] = result[2] > line_width;
-  junction[3] = heading;
-  junction[4] = -1;
-  return junction
+int longestStreak(const int sensor_data[], int const n){
+  int streak = 0;
+  int max_streak = 0;
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      streak += 1;
+    }
+    else{
+      max_streak = streak > max_streak ? streak : max_streak;
+      streak = 0;
+    }
+  }
+  return max_streak;
+}
+
+int* checkJunction(const int sensor_data[], int const n){
+  int result[3] = {countEndStreak(0, sensor_data, n), longestStreak(sensor_data, n), countEndStreak(1, sensor_data, n)};
+  // result format : [left_streak, highest_streak, right_streak];
+  // left_streak : Number of sensors consecutively  on from the left
+  // (If it's too complicated to get the streaks in one function call, we can do it in three)
+  int *junction = new int[5]{
+    result[0] > line_width,
+    result[1] >= 0,
+    result[2] > line_width,
+    heading,
+    -1
+  };
+  return junction;
 }
 
 Junction getJunction(bool const sensor_data[], int const n){
@@ -336,7 +357,6 @@ Junction getJunction(bool const sensor_data[], int const n){
   previous_junction = junction;
   return nullptr;
 }
-*/
 
 // Task: Stop at end
 void wall_hugger_loop(){
