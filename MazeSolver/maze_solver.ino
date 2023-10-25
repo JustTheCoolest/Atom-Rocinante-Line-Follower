@@ -297,6 +297,17 @@ constexpr int line_width = 2;
 typedef Direction = int;
 typedef Junction = int[5];
 
+int countStreaks(unsigned int mode, bool const sensor_data[], int const n){
+  if(mode==0){ // left
+    for(int i=0; i<n; ++i){
+      if(!sensor_data[i]){
+        return i;
+      }
+    }
+    return n;
+  }
+}
+
 Junction checkJunction(bool const sensor_data[], int const n){
   int result = countStreaks(sensor_data, n);
   result format : [left_streak, highest_streak, right_streak];
