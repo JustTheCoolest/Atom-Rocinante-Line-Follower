@@ -78,7 +78,7 @@ void digitaliseData(bool mode, int sensor_data[]=an_ir, int const thresholds[]=t
 {
   int sign = mode ? +1 : -1;
   for(int i=0; i<n; ++i){
-    dig_ir[i] = sign * sensor_data[i] > sign * thresholds[i];.
+    dig_ir[i] = sign * sensor_data[i] > sign * thresholds[i];
   }
 }
 
@@ -149,6 +149,7 @@ void printArray(int array[], int n=8){
     Serial.print(" ");
   }
   Serial.print("\n");
+}
 
 void sensorsRead(int sensor_data[], byte const pins[], int n = 8){
   for(int i=0; i<n; i++){
