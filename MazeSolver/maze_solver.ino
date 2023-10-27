@@ -1,5 +1,7 @@
 /* TODO: Base speed, response delay, wheels, continuous calibration */
 
+#include <math.h>
+
 // #include "constants.h"
 constexpr float kp = 80,ki = 0,kd =0;
 constexpr int base_pwm = 0;
@@ -50,9 +52,13 @@ void assignMotor(int speed, const bool forward_direction, const int in1, const i
   analogWrite(pwm_pin, speed);
 }
 
+void writeMotor(const int motor_pwm, const int mot_pins[] = mot_pins){
+  assignMotor(abs(motor_pwm), motor_pwm > 0, mot_pins[0], mot_pins[1], mot_pins[2]);
+}
+
 void writeMotors(const int left_motor_pwm, const int right_motor_pwm, const int mot_pins[6] = mot_pins){
-  assignMotor(left_motor_pwm, HIGH, mot_pins[0], mot_pins[1], mot_pins[2]);
-  assignMotor(right_motor_pwm, HIGH, mot_pins[3], mot_pins[4], mot_pins[5]);
+  writeMotor(left_motor_pwm, mot_pins);
+  writeMotor(right_motor_pwm, mot_pins+3);
 }
 
 void startSpinning(const bool clockwise_flag, const int mot_pins[6] = mot_pins){
