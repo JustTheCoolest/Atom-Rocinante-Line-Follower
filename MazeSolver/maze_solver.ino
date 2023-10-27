@@ -6,7 +6,7 @@
 constexpr float kp = 80,ki = 0,kd =0;
 constexpr int base_pwm = 0; // max speed
 constexpr unsigned int response_delay = 0;
-constexpr float calibration_ratio;
+constexpr float calibration_ratio = 0.6;
 
 constexpr int n = 8;
 constexpr int sensor_distances[] = {-4, -3, -2, -1, +1, +2, +3, +4};
@@ -17,8 +17,8 @@ constexpr int line_width = 2;
 // int heading = north;
 constexpr int left = -1, front = 0, right = 1, back = 2;
 
-const int en[2]; // pin to enable motors " can be shorted to 3v3 or 5v if no pins are available " 
-const int mot_pins[6]; // tb6612fng motor driver pins
+const int en[2] = {0, 0}; // pin to enable motors " can be shorted to 3v3 or 5v if no pins are available " 
+const int mot_pins[6] = {0, 0, 0, 0, 0, 0}; // tb6612fng motor driver pins
 int ir1 = A0;
 int ir2 = A1;
 int ir3 = A2;
@@ -388,7 +388,7 @@ void makeTurn(const int direction, const int n){
 }
 
 // Task: Stop at end
-void wall_hugger_loop(){
+void loop(){
   sensorsRead();
   digitaliseData(black_line);
   bool in_end = checkConditionToAction(
