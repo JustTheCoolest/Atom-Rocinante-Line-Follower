@@ -358,6 +358,34 @@ int* getJunction(int const sensor_data[], int const n){
   return nullptr;
 }
 
+void makeTurn(const int direction, const int n){
+  int escape_index, catch_index, left_motor_pwm, right_motor_pwm;
+  if(direction == right){
+    escape_index = 0;
+    catch_index = n-1;
+    left_motor_pwm = base_pwm;
+  }
+  else if(direction == left){
+    escape_index = n-1;
+    catch_index = 0;
+    left_motor_pwm = -base_pwm;
+  }
+  else{
+    return;
+  }
+  right_motor_pwm = -left_motor_pwm;
+  writeMotors(left_motor_pwm, right_motor_pwm);
+  // Improvement: Asynchronise the sensor read
+  while(!dig_ir[escape_index]){
+    sensorsRead();
+    digitaliseData(black_line);
+  }
+  while(dig_ir[catch_index]){
+    sensorsRead();
+    digitaliseData(black_line);
+  }
+}
+
 // Task: Stop at end
 void wall_hugger_loop(){
   sensorsRead();
