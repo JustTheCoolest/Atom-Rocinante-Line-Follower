@@ -1,17 +1,24 @@
 /* TODO: Base speed, response delay, wheels, continuous calibration */
 
+#include <math.h>
+
 // #include "constants.h"
 constexpr float kp = 80,ki = 0,kd =0;
-constexpr int base_pwm = 0;
+constexpr int base_pwm = 0; // max speed
 constexpr unsigned int response_delay = 0;
-constexpr float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
+constexpr float calibration_ratio = 0.6;
 
 constexpr int n = 8;
-constexpr bool black_line = false;
 constexpr int sensor_distances[] = {-4, -3, -2, -1, +1, +2, +3, +4};
+constexpr bool black_line = false;
+constexpr int line_width = 2;
 
-const int en[2]; // pin to enable motors " can be shorted to 3v3 or 5v if no pins are available " 
-const int mot_pins[6]; // tb6612fng motor driver pins
+// constexpr int west = 0, north = 1, east = 2, south = 3;
+// int heading = north;
+constexpr int left = -1, front = 0, right = 1, back = 2;
+
+const int en[2] = {0, 0}; // pin to enable motors " can be shorted to 3v3 or 5v if no pins are available " 
+const int mot_pins[6] = {0, 0, 0, 0, 0, 0}; // tb6612fng motor driver pins
 int ir1 = A0;
 int ir2 = A1;
 int ir3 = A2;
@@ -46,9 +53,13 @@ void assignMotor(int speed, const bool forward_direction, const int in1, const i
   analogWrite(pwm_pin, speed);
 }
 
+void writeMotor(const int motor_pwm, const int mot_pins[] = mot_pins){
+  assignMotor(abs(motor_pwm), motor_pwm > 0, mot_pins[0], mot_pins[1], mot_pins[2]);
+}
+
 void writeMotors(const int left_motor_pwm, const int right_motor_pwm, const int mot_pins[6] = mot_pins){
-  assignMotor(left_motor_pwm, HIGH, mot_pins[0], mot_pins[1], mot_pins[2]);
-  assignMotor(right_motor_pwm, HIGH, mot_pins[3], mot_pins[4], mot_pins[5]);
+  writeMotor(left_motor_pwm, mot_pins);
+  writeMotor(right_motor_pwm, mot_pins+3);
 }
 
 void startSpinning(const bool clockwise_flag, const int mot_pins[6] = mot_pins){
@@ -279,69 +290,119 @@ bool checkConditionToAction(bool (condition)(), void (action)()){
   return true;
 }
 
-/*
-
-constexpr int line_width = 2;
-
-typedef Direction = int;
-typedef Junction = int[5];
-
-int countStreaks(unsigned int mode, bool const sensor_data[], int const n){
+int countEndStreak(unsigned int mode, int const sensor_data[], int const n){
+  int start_point, end_point, increment;
   if(mode==0){ // left
-    for(int i=0; i<n; ++i){
-      if(!sensor_data[i]){
-        return i;
-      }
-    }
-    return n;
+    start_point = 0;
+    end_point = n;
+    increment = 1;
   }
+  else if(mode=1){ // right
+    start_point = n-1;
+    end_point = -1;
+    increment = -1;
+  }
+  for(int i=0; i<n; ++i){
+    if(!sensor_data[i]){
+      return i;
+    }
+  }
+  return n;
 }
 
-Junction checkJunction(bool const sensor_data[], int const n){
-  int result = countStreaks(sensor_data, n);
-  result format : [left_streak, highest_streak, right_streak];
-  left_streak : Number of sensors consecutively  on from the left
-  (If it's too complicated to get the streaks in one function call, we can do it in three)
-  Junction junction = new Junction;
-  junction[0] = result[0] > line_width;
-  junction[1] = result[1] >= 0;
-  junction[2] = result[2] > line_width;
-  junction[3] = heading;
-  junction[4] = -1;
-  return junction
+int longestStreak(const int sensor_data[], int const n){
+  int streak = 0;
+  int max_streak = 0;
+  for(int i=0; i<n; ++i){
+    if(sensor_data[i]){
+      streak += 1;
+    }
+    else{
+      max_streak = streak > max_streak ? streak : max_streak;
+      streak = 0;
+    }
+  }
+  return max_streak;
 }
 
-Junction getJunction(bool const sensor_data[], int const n){
-  static Junction previous_junction = nullptr;
-  Junction junction = checkJunction(sensor_data, n);
-  if(junction=={0, 1, 0, x, x}){
+int* checkJunction(const int sensor_data[], int const n){
+  int result[3] = {countEndStreak(0, sensor_data, n), longestStreak(sensor_data, n), countEndStreak(1, sensor_data, n)};
+  // result format : [left_streak, highest_streak, right_streak];
+  // left_streak : Number of sensors consecutively  on from the left
+  // (If it's too complicated to get the streaks in one function call, we can do it in three)
+  int *junction = new int[5]{
+    result[0] > line_width,
+    result[1] >= 0,
+    result[2] > line_width,
+    // add these while pushing to stack
+    // heading,
+    // -1
+  };
+  return junction;
+}
+
+int* getJunction(int const sensor_data[], int const n){
+  // junction returned will exist only for one iteration. save it somewhere else (no need for wall hugger)
+  static int *previous_junction = nullptr;
+  int *junction = checkJunction(sensor_data, n);
+  if(junction[1] && !junction[0] && !junction[2]){
     if(previous_junction != nullptr){
+      delete [] previous_junction;
       previous_junction = nullptr;
       return junction;
     }
     return nullptr;
   }
-  assert previous_junction == junction;
+  // assert previous_junction == junction || previous_junction == nullptr;
+  delete [] previous_junction;
   previous_junction = junction;
   return nullptr;
 }
-*/
+
+void makeTurn(const int direction, const int n){
+  int escape_index, catch_index, left_motor_pwm, right_motor_pwm;
+  if(direction == right){
+    escape_index = 0;
+    catch_index = n-1;
+    left_motor_pwm = base_pwm;
+  }
+  else if(direction == left){
+    escape_index = n-1;
+    catch_index = 0;
+    left_motor_pwm = -base_pwm;
+  }
+  else{
+    return;
+  }
+  right_motor_pwm = -left_motor_pwm;
+  writeMotors(left_motor_pwm, right_motor_pwm);
+  // Future Improvement: Asynchronise the sensor read
+  while(!dig_ir[escape_index]){
+    sensorsRead();
+    digitaliseData(black_line);
+  }
+  while(dig_ir[catch_index]){
+    sensorsRead();
+    digitaliseData(black_line);
+  }
+}
 
 // Task: Stop at end
-void wall_hugger_loop(){
+void loop(){
   sensorsRead();
   digitaliseData(black_line);
   bool in_end = checkConditionToAction(
     [](){return isEndAlike(dig_ir, n);},
-    [](){stopMoving();}
+    [](){}
+    // [](){stopMoving();}
   );
   if(in_end){
     return;
   }
-  Junction junction = getJunction(dig_ir, n);
-  Turn direction = junction ? front : junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
+  int  *junction = getJunction(dig_ir, n);
+  int direction = junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
   if(direction != front){
-    makeTurn(direction);
+    makeTurn(direction, n);
     return;
   }
   pid();
