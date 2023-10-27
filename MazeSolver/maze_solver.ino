@@ -4,17 +4,18 @@
 
 // #include "constants.h"
 constexpr float kp = 80,ki = 0,kd =0;
-constexpr int base_pwm = 0;
+constexpr int base_pwm = 0; // max speed
 constexpr unsigned int response_delay = 0;
-constexpr float calibration_ratio;  //0.2 or 0.05 response_delay at zero is almost the same:The same can be used
+constexpr float calibration_ratio;
 
 constexpr int n = 8;
+constexpr int sensor_distances[] = {-4, -3, -2, -1, +1, +2, +3, +4};
 constexpr bool black_line = false;
 constexpr int line_width = 2;
-constexpr int sensor_distances[] = {-4, -3, -2, -1, +1, +2, +3, +4};
 
-constexpr int west = 0, north = 1, east = 2, south = 3;
-int heading = north;
+// constexpr int west = 0, north = 1, east = 2, south = 3;
+// int heading = north;
+constexpr int left = -1, front = 0, right = 1, back = 2;
 
 const int en[2]; // pin to enable motors " can be shorted to 3v3 or 5v if no pins are available " 
 const int mot_pins[6]; // tb6612fng motor driver pins
@@ -375,7 +376,7 @@ void makeTurn(const int direction, const int n){
   }
   right_motor_pwm = -left_motor_pwm;
   writeMotors(left_motor_pwm, right_motor_pwm);
-  // Improvement: Asynchronise the sensor read
+  // Future Improvement: Asynchronise the sensor read
   while(!dig_ir[escape_index]){
     sensorsRead();
     digitaliseData(black_line);
@@ -392,15 +393,16 @@ void wall_hugger_loop(){
   digitaliseData(black_line);
   bool in_end = checkConditionToAction(
     [](){return isEndAlike(dig_ir, n);},
-    [](){stopMoving();}
+    [](){}
+    // [](){stopMoving();}
   );
   if(in_end){
     return;
   }
-  Junction junction = getJunction(dig_ir, n);
-  Turn direction = junction ? front : junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
+  int  *junction = getJunction(dig_ir, n);
+  int direction = junction[0] ? left : junction[1] ? front : junction[2] ? right : back;
   if(direction != front){
-    makeTurn(direction);
+    makeTurn(direction, n);
     return;
   }
   pid();
